@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scovilleschaal Machine</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-gradient-start: #1a0b0b;
+            --bg-gradient-end: #2d0a0a;
+            --card-bg: rgba(45, 10, 10, 0.7);
+            --card-border: rgba(255, 100, 100, 0.1);
+            --primary-color: #ef4444; /* Pepper Red */
+            --primary-hover: #b91c1c;
+            --text-main: #f8fafc;
+            --text-muted: #fca5a5;
+            --fire-glow: rgba(239, 68, 68, 0.3);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: linear-gradient(135deg, var(--bg-gradient-start) 0%, var(--bg-gradient-end) 100%);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            overflow-x: hidden;
+        }
+
+        .back-btn {
+            position: absolute; top: 30px; left: 30px; display: flex; align-items: center; gap: 8px;
+            color: var(--text-muted); text-decoration: none; font-weight: 600; transition: all 0.3s ease;
+            z-index: 10; padding: 8px 16px; border-radius: 12px; background: rgba(255,255,255,0.05); border: 1px solid var(--card-border);
+        }
+        .back-btn:hover { color: var(--primary-color); background: rgba(239, 68, 68, 0.1); border-color: var(--primary-color); transform: translateX(-5px); }
+
+        .container {
+            background: var(--card-bg); backdrop-filter: blur(24px); padding: 2.5rem; border-radius: 32px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7), 0 0 0 1px var(--card-border);
+            max-width: 1000px; width: 100%; z-index: 1; position: relative;
+            display: flex; flex-direction: column; gap: 1.5rem;
+        }
+
+        .header { text-align: center; }
+        h1 { font-size: 2.5rem; font-weight: 800; background: linear-gradient(to right, #fff, var(--primary-color)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .subtitle { color: var(--text-muted); font-size: 1rem; }
+
+        .app-layout { display: grid; grid-template-columns: 350px 1fr; gap: 2rem; align-items: start; }
+        @media(max-width: 800px) { .app-layout { grid-template-columns: 1fr; } }
+
+        /* Scoville Thermometer */
+        .scoville-scale {
+            background: rgba(0,0,0,0.4); border-radius: 24px; padding: 20px; border: 1px solid var(--card-border);
+            display: flex; flex-direction: column; gap: 10px; position: relative;
+        }
+        .scale-item {
+            display: flex; align-items: center; gap: 15px; padding: 12px; border-radius: 12px;
+            cursor: pointer; transition: all 0.3s ease; border: 1px solid transparent;
+        }
+        .scale-item:hover { background: rgba(255,255,255,0.05); transform: translateX(10px); }
+        .scale-item.active { background: var(--primary-color); border-color: #fff; box-shadow: 0 0 20px var(--fire-glow); }
+        .scale-item.active .shu { color: #fff; }
+
+        .pepper-icon { font-size: 1.8rem; filter: drop-shadow(0 0 5px rgba(0,0,0,0.5)); }
+        .pepper-info { display: flex; flex-direction: column; }
+        .pepper-name { font-weight: 800; font-size: 0.9rem; }
+        .shu { font-family: 'Space Mono'; font-size: 0.8rem; color: var(--text-muted); }
+
+        /* Display Area */
+        .display-card {
+            background: rgba(0,0,0,0.3); border-radius: 24px; padding: 2rem; border: 1px solid var(--card-border);
+            text-align: center; display: flex; flex-direction: column; gap: 1.5rem; min-height: 400px;
+            justify-content: center; position: relative; overflow: hidden;
+        }
+        .reaction-face { font-size: 5rem; animation: shake 0.5s infinite alternate; display: none; }
+        @keyframes shake { from { transform: rotate(-5deg) scale(1.1); } to { transform: rotate(5deg) scale(1.1); } }
+        
+        .fire-bg {
+            position: absolute; bottom: 0; left: 0; width: 100%; height: 50%;
+            background: linear-gradient(to top, rgba(239, 68, 68, 0.2), transparent);
+            z-index: 0; display: none;
+        }
+
+        .pepper-detail { z-index: 1; }
+        .huge-shu { font-family: 'Space Mono'; font-size: 3.5rem; font-weight: 800; color: var(--primary-color); line-height: 1; margin: 10px 0; }
+
+        .origin-section {
+            background: rgba(255,255,255,0.05); padding: 1.5rem; border-radius: 20px; border: 1px solid var(--card-border);
+            text-align: left; opacity: 0.9;
+        }
+        .origin-title { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; font-weight: 800; color: var(--primary-color); }
+
+        .info-panel {
+            background: rgba(239, 68, 68, 0.05); padding: 1rem; border-radius: 12px; border-left: 4px solid var(--primary-color);
+            line-height: 1.5; font-size: 0.9rem; color: var(--text-muted);
+        }
+
+        .info-icon-btn {
+            background: rgba(255, 255, 255, 0.1); border: 1px solid var(--card-border); color: var(--primary-color);
+            width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+            cursor: pointer; transition: 0.3s;
+        }
+    </style>
+</head>
+<body>
+
+    <a href="index.html" class="back-btn">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+        Bibliotheek
+    </a>
+
+    <div class="container">
+        <div class="header">
+            <div style="display:flex; align-items:center; justify-content:center; gap:15px; margin-bottom: 5px;">
+                <h1>De Scovilleschaal</h1>
+                <div class="info-icon-btn" onclick="toggleModal()">?</div>
+            </div>
+            <p class="subtitle">Wat maakt pepers heet? En wie is de kampioen pittigheid?</p>
+        </div>
+
+        <div class="app-layout">
+            <div class="scoville-scale" id="scale">
+                <div class="scale-item" onclick="selectPepper(0)">
+                    <div class="pepper-icon">🫑</div>
+                    <div class="pepper-info"><div class="pepper-name">Paprika</div><div class="shu">0 SHU</div></div>
+                </div>
+                <div class="scale-item" onclick="selectPepper(1)">
+                    <div class="pepper-icon">🟢</div>
+                    <div class="pepper-info"><div class="pepper-name">Jalapeño</div><div class="shu">5.000 SHU</div></div>
+                </div>
+                <div class="scale-item" onclick="selectPepper(2)">
+                    <div class="pepper-icon">🌶️</div>
+                    <div class="pepper-info"><div class="pepper-name">Cayenne</div><div class="shu">40.000 SHU</div></div>
+                </div>
+                <div class="scale-item" onclick="selectPepper(3)">
+                    <div class="pepper-icon">🟠</div>
+                    <div class="pepper-info"><div class="pepper-name">Habanero</div><div class="shu">300.000 SHU</div></div>
+                </div>
+                <div class="scale-item" onclick="selectPepper(4)">
+                    <div class="pepper-icon">👻</div>
+                    <div class="pepper-info"><div class="pepper-name">Ghost Pepper</div><div class="shu">1.000.000 SHU</div></div>
+                </div>
+                <div class="scale-item" onclick="selectPepper(5)">
+                    <div class="pepper-icon">🔥</div>
+                    <div class="pepper-info"><div class="pepper-name">Carolina Reaper</div><div class="shu">2.200.000 SHU</div></div>
+                </div>
+            </div>
+
+            <div class="display-card">
+                <div class="fire-bg" id="fire"></div>
+                
+                <div class="pepper-detail" id="detail">
+                    <p id="detailName" style="font-size: 1.5rem; font-weight: 800;">Klik op een peper!</p>
+                    <div class="huge-shu" id="detailShu">-</div>
+                    <p id="detailText" style="color:var(--text-muted); padding: 0 20px;">Ontdek de kracht van Capsaïcine.</p>
+                </div>
+
+                <div class="reaction-face" id="face">😀</div>
+            </div>
+        </div>
+
+        <div class="origin-section">
+            <div class="origin-title">
+                <span>🌍</span> Waarom kan Jonah's familie uit Nigeria zo goed tegen pittig eten?
+            </div>
+            <div style="font-size: 0.9rem; line-height: 1.6; color: rgba(255,255,255,0.8);">
+                In landen als <b>Nigeria</b> eten mensen al duizenden jaren pepers. Dat is niet alleen lekker, maar ook heel slim! 
+                Ten eerste helpt pittig eten je lichaam om te gaan zweten, wat je weer <b>verkoelt</b> in de hete zon. 
+                Ten tweede beschermen pepers het eten tegen bacteriën. Maar de belangrijkste reden? Omdat mensen in Nigeria ermee <b>opgroeien</b>, wennen hun smaakpapillen eraan. De pijn-receptoren in je mond worden een beetje "moe" van de pepers, waardoor ze minder pijn doorgeven. Het is een echte superkracht! 🇳🇬🔥
+            </div>
+        </div>
+
+        <div class="info-panel">
+            <b>Peper-geheim:</b> Capsaïcine is de stof in pepers die je hersenen laat denken dat je mond in brand staat. Maar er is geen écht vuur! Je hersenen sturen alleen een waarschuwing.
+        </div>
+    </div>
+
+    <!-- Modal -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal-content">
+            <h2 style="color: var(--primary-color); margin-bottom: 1rem;">Wat is een SHU?</h2>
+            <div style="line-height:1.6; color: var(--text-muted); font-size: 0.95rem;">
+                <p>Wilbur Scoville bedacht deze schaal in 1912. Hij verdunde peper-olie met suikerwater tot je de hitte niet meer kon proeven.</p>
+                <br>
+                <p>Als een peper 1.000 SHU heeft, betekent dit dat je het 1.000 keer moet verdunnen voordat de hitte weg is. De <b>Carolina Reaper</b> heeft 2,2 miljoen SHU... dat is pas écht extreem!</p>
+                <br>
+                <p><b>Tip:</b> Heb je een te hete peper gegeten? Drink dan <b>melk</b>! Water helpt niet, want de pittige olie lost niet op in water, maar wel in vet (zoals in melk).</p>
+                <br>
+                <button class="back-btn" style="position:static; width:100%; margin-top:10px;" onclick="toggleModal()">Terug naar de pepers</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const peppers = [
+            { name: "Paprika", shu: "0", face: "😀", text: "Helemaal niet pittig. Lekker op een pizza!", fire: 0 },
+            { name: "Jalapeño", shu: "5.000", face: "😋", text: "Een milde prikkel op je tong. Vaak te vinden op nacho's.", fire: 0.2 },
+            { name: "Cayenne", shu: "40.000", face: "🥵", text: "Nu begint het serieus te worden. Je krijgt het warm!", fire: 0.4 },
+            { name: "Habanero", shu: "300.000", face: "😫", text: "Pas op! Dit is een van de heetste pepers ter wereld voor dagelijks gebruik.", fire: 0.6 },
+            { name: "Ghost Pepper", shu: "1.000.000", face: "😱", text: "Extreem heet. In India wordt deze peper zelfs gebruikt om olifanten op afstand te houden!", fire: 0.8 },
+            { name: "Carolina Reaper", shu: "2.200.000", face: "💀", text: "De koning van de pijn. Eén klein stukje is al genoeg voor een vurig brandend gevoel urenlang.", fire: 1 }
+        ];
+
+        function toggleModal() {
+            document.getElementById('modalOverlay').classList.toggle('active');
+        }
+
+        function selectPepper(idx) {
+            const items = document.querySelectorAll('.scale-item');
+            items.forEach((item, i) => item.classList.toggle('active', i === idx));
+
+            const p = peppers[idx];
+            document.getElementById('detailName').innerText = p.name;
+            document.getElementById('detailShu').innerText = p.shu + " SHU";
+            document.getElementById('detailText').innerText = p.text;
+
+            const face = document.getElementById('face');
+            face.innerText = p.face;
+            face.style.display = 'block';
+            
+            // Animation for face
+            face.style.animation = 'none';
+            face.offsetHeight; 
+            face.style.animation = `shake ${0.6 - (p.fire * 0.5)}s infinite alternate`;
+
+            const fire = document.getElementById('fire');
+            fire.style.display = 'block';
+            fire.style.height = (p.fire * 100) + '%';
+            fire.style.opacity = p.fire;
+        }
+    </script>
+</body>
+</html>
