@@ -392,6 +392,17 @@
             }
         }
 
+        @media (max-width: 500px) {
+            .container { padding: 1.5rem; }
+            h1 { font-size: 1.8rem; }
+            .step-math { font-size: 1rem; gap: 8px; }
+            .number-block { padding: 4px 6px; letter-spacing: 1px; }
+            .step-result { font-size: 1.1rem; padding: 6px 10px; letter-spacing: 1px; }
+            .step { padding: 12px 15px; }
+            .final-msg { font-size: 1rem; padding: 12px; }
+            .final-msg span.magic-number { font-size: 1.1rem; flex-wrap: wrap; line-height: 1.4; }
+        }
+
         .history-controls {
             display: flex;
             justify-content: space-between;
@@ -839,7 +850,15 @@
         if (current === "6174") {
             const finalMsg = document.createElement('div');
             finalMsg.className = 'final-msg';
-            finalMsg.innerHTML = `Constante bereikt!<span class="magic-number">${inputVal} &rarr; 6174 = ${iterations}<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 16v-2.38C4 11.5 2.97 10.5 3 8c.03-2.72 1.49-6 4.5-6C9.37 2 10 3.8 10 5.5c0 3.11-2 5.66-2 8.68V16a2 2 0 1 1-4 0Z"/><path d="M20 20v-2.38c0-2.12 1.03-3.12 1-5.62-.03-2.72-1.49-6-4.5-6C14.63 6 14 7.8 14 9.5c0 3.11 2 5.66 2 8.68V20a2 2 0 1 0 4 0Z"/><path d="M16 17h4"/><path d="M4 13h4"/></svg></span>`;
+            finalMsg.innerHTML = `
+                <div style="margin-bottom: 8px;">Constante bereikt!</div>
+                <span class="magic-number">
+                    ${inputVal} &rarr; 6174
+                    <span style="display:flex; align-items:center; gap:5px; background:rgba(0,0,0,0.2); padding:2px 8px; border-radius:20px; color:var(--success-color);">
+                        = ${iterations} <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 16v-2.38C4 11.5 2.97 10.5 3 8c.03-2.72 1.49-6 4.5-6C9.37 2 10 3.8 10 5.5c0 3.11-2 5.66-2 8.68V16a2 2 0 1 1-4 0Z"/><path d="M20 20v-2.38c0-2.12 1.03-3.12 1-5.62-.03-2.72-1.49-6-4.5-6C14.63 6 14 7.8 14 9.5c0 3.11 2 5.66 2 8.68V20a2 2 0 1 0 4 0Z"/><path d="M16 17h4"/><path d="M4 13h4"/></svg>
+                    </span>
+                </span>
+            `;
             log.appendChild(finalMsg);
         } else if (current === "0000") {
              const finalMsg = document.createElement('div');
