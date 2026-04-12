@@ -81,13 +81,13 @@
         input[type="number"]:focus { border-color: var(--primary-color); box-shadow: 0 0 0 4px rgba(252, 211, 77, 0.15); }
         input[type=number]::-webkit-inner-spin-button, input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
         
-        button {
+        #btn-grow {
             flex: 1; height: 53px; background: linear-gradient(to right, #fbbf24, #f59e0b); color: #000; font-family: 'Outfit', sans-serif; font-weight: 700; font-size: 1.1rem; border: none; border-radius: 12px; cursor: pointer; transition: all 0.3s ease; box-shadow: 0 4px 15px rgba(245, 158, 11, 0.3);
         }
-        button:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(245, 158, 11, 0.4); }
+        #btn-grow:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(245, 158, 11, 0.4); }
 
         .chart-area {
-            background: var(--chart-bg); border-radius: 16px; padding: 1.5rem; padding-left: 5.5rem; display: flex; flex-direction: column; position: relative; border: 1px solid var(--card-border);
+            background: var(--chart-bg); border-radius: 16px; padding: 2rem; padding-left: 6.5rem; padding-bottom: 2rem; display: flex; flex-direction: column; position: relative; border: 1px solid var(--card-border);
         }
 
         .chart-title { font-size: 1rem; font-weight: 700; color: var(--primary-color); margin-bottom: 1rem; display: flex; justify-content: space-between; }
@@ -223,20 +223,20 @@
             <!-- Controls -->
             <div class="controls-toolbar">
                 <div class="input-group">
-                    <label>Eerste Zaadje</label>
+                    <label>Startgetal 1</label>
                     <input type="number" id="seed1" value="1" min="1" max="100" style="font-size: 1.1rem; padding: 12px;">
                 </div>
                 <div class="input-group">
-                    <label>Tweede Zaadje</label>
+                    <label>Startgetal 2</label>
                     <input type="number" id="seed2" value="1" min="1" max="100" style="font-size: 1.1rem; padding: 12px;">
                 </div>
-                <button onclick="startGrowing()" id="btn-grow">Start Groei 🌱</button>
+                <button onclick="startGrowing()" id="btn-grow">Start Reeks ✨</button>
             </div>
 
             <!-- Visualization -->
             <div class="chart-area">
                 <div class="chart-title">
-                    <span>Groeisnelheid (Verhoudingen)</span>
+                    <span>Ontwikkeling Verhoudingen</span>
                 </div>
                 <div class="graph" id="graph">
                     <!-- The Phi perfect line -->
@@ -245,7 +245,7 @@
             </div>
 
             <div class="log-box" id="logBox">
-                <div style="opacity:0.5;">Wacht op zaadjes...</div>
+                <div style="opacity:0.5;">Wacht op invoer...</div>
             </div>
         </div>
     </div>
@@ -424,7 +424,7 @@
             }
 
             btn.style.opacity = '1';
-            btn.innerText = "Nieuwe Test 🌱";
+            btn.innerText = "Nieuwe Reeks ✨";
             
             // Wacht nog héél even met frame loop killen zodat zoom netjes afrond
             await sleep(1000);
