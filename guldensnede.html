@@ -251,24 +251,15 @@
                 ratios.push(sequence[i] / sequence[i-1]);
             }
 
-            // Calculate min max for visual chart zooming
-            let minRatio = Math.min(...ratios);
-            let maxRatio = Math.max(...ratios);
-            
-            // Add padding so Phi is nicely visible
-            let range = (maxRatio - minRatio) * 1.5; 
-            if(range < 0.2) range = 0.5; // fallback
-            
-            let chartHigh = PHI + (range / 2);
-            let chartLow = PHI - (range / 2);
+            // We fixeren de grafiek schaal vast rond het Gulden Getal (PHI)
+            // zodat we altijd 1.618 in het exacte midden zien.
+            // Outliers (extreme afwijkingen in het begin) clippen netjes op de rand,
+            // waardoor de "wobble" (het stuiteren tot rust) enorm goed zichtbaar wordt.
+            let chartHigh = PHI + 0.7; // ca 2.318
+            let chartLow = PHI - 0.7;  // ca 0.918
 
-            // if lowest is smaller than chartLow
-            if(minRatio < chartLow) chartLow = minRatio - 0.1;
-            if(maxRatio > chartHigh) chartHigh = maxRatio + 0.1;
-
-            // Put the phi line
-            const phiPercent = Math.max(5, Math.min(95, ((PHI - chartLow) / (chartHigh - chartLow)) * 100));
-            document.getElementById('phiLine').style.top = `calc(${100 - phiPercent}%)`; // Because bottom is 0%
+            // Zet de Phi lijn altijd exact op 50%
+            document.getElementById('phiLine').style.top = `50%`;
 
             // Animate steps
             for(let i = 0; i < ratios.length; i++) {
