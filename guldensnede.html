@@ -106,9 +106,10 @@
 
         .bar-container { position: relative; width: 30px; height: 100%; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; z-index: 2; opacity: 0; transform: translateY(10px); transition: all 0.4s ease; }
         .bar-container.show { opacity: 1; transform: translateY(0); }
-        .bar-dot { width: 12px; height: 12px; background: var(--accent-color); border-radius: 50%; box-shadow: 0 0 10px var(--accent-color); position: absolute; bottom: 0; transition: bottom 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
-        .bar-value { font-family: 'Space Mono'; font-size: 0.65rem; color: var(--text-muted); position: absolute; bottom: -20px; }
-        .bar-ratio { font-family: 'Space Mono'; font-size: 0.75rem; color: white; position: absolute; top: -25px; background: rgba(0,0,0,0.5); padding: 2px 4px; border-radius: 4px; display: none; }
+        .dot-wrapper { position: absolute; width: 100%; height: 100%; bottom: 0; overflow: hidden; border-radius: 4px; pointer-events: none; }
+        .bar-dot { width: 12px; height: 12px; background: var(--accent-color); border-radius: 50%; box-shadow: 0 0 10px var(--accent-color); position: absolute; left: 50%; transform: translateX(-50%); transition: bottom 0.8s cubic-bezier(0.25, 0.8, 0.25, 1); }
+        .bar-value { font-family: 'Space Mono'; font-size: 0.65rem; color: var(--text-muted); position: absolute; bottom: -24px; }
+        .bar-ratio { font-family: 'Space Mono'; font-size: 0.75rem; color: white; position: absolute; top: -30px; background: rgba(0,0,0,0.5); padding: 4px; border-radius: 4px; display: none; white-space: nowrap; }
         .bar-container:hover .bar-ratio { display: block; z-index: 10; }
 
         .log-box { margin-top: 1.5rem; background: rgba(0,0,0,0.2); padding: 15px; border-radius: 12px; height: 100px; overflow-y: auto; font-family: 'Space Mono'; font-size: 0.9rem; line-height: 1.5; color: var(--text-muted); }
@@ -251,31 +252,39 @@
                 ratios.push(sequence[i] / sequence[i-1]);
             }
 
-            // We fixeren de grafiek schaal vast rond het Gulden Getal (PHI)
-            // zodat we altijd 1.618 in het exacte midden zien.
-            // Outliers (extreme afwijkingen in het begin) clippen netjes op de rand,
-            // waardoor de "wobble" (het stuiteren tot rust) enorm goed zichtbaar wordt.
-            let chartHigh = PHI + 0.7; // ca 2.318
-            let chartLow = PHI - 0.7;  // ca 0.918
+            // Prepareer de canvas-zoom startwaarden
+            let currentRange = Math.abs(ratios[0] - PHI) * 3.5; 
+            if(currentRange < 0.1) currentRange = 1.0; // fallback
 
-            // Zet de Phi lijn altijd exact op 50%
             document.getElementById('phiLine').style.top = `50%`;
 
-            // Animate steps
+            // Animate steps met de dynamische "Camera Zoom"
             for(let i = 0; i < ratios.length; i++) {
                 let ratio = ratios[i];
                 let prev = sequence[i];
                 let curr = sequence[i+1];
 
-                // Determine height
-                let dotPercent = Math.max(5, Math.min(95, ((ratio - chartLow) / (chartHigh - chartLow)) * 100));
+                // Check hoeveel zoom er mogelijk is: we willen minimaal de nieuwste afwijking zien.
+                let neededRange = Math.abs(ratio - PHI) * 3.5; 
+                if (neededRange < 0.00001) neededRange = 0.00001; // Extreme inzoom limiet
+                
+                // Camera zoomt alleen sneller in, zoomt nooit lelijk uit.
+                if (neededRange < currentRange) {
+                    currentRange = neededRange;
+                }
+
+                let chartHigh = PHI + (currentRange / 2);
+                let chartLow = PHI - (currentRange / 2);
 
                 let container = document.createElement('div');
                 container.className = 'bar-container';
 
+                let wrapper = document.createElement('div');
+                wrapper.className = 'dot-wrapper';
+
                 let dot = document.createElement('div');
                 dot.className = 'bar-dot';
-                dot.style.bottom = `${dotPercent}%`;
+                wrapper.appendChild(dot);
 
                 let ratioTooltip = document.createElement('div');
                 ratioTooltip.className = 'bar-ratio';
@@ -286,9 +295,17 @@
                 indexVal.innerText = i+1;
 
                 container.appendChild(ratioTooltip);
-                container.appendChild(dot);
+                container.appendChild(wrapper);
                 container.appendChild(indexVal);
                 graph.appendChild(container);
+
+                // Nu updaten we ALLE dots die al bestaan naar de nieuwe "ingezoomde" view!
+                const allBars = graph.querySelectorAll('.bar-container');
+                allBars.forEach((bContainer, index) => {
+                    let dRatio = ratios[index];
+                    let dPercent = ((dRatio - chartLow) / (chartHigh - chartLow)) * 100;
+                    bContainer.querySelector('.bar-dot').style.bottom = `calc(${dPercent}% - 6px)`; // 6px offset voor de halvering bal
+                });
 
                 // Entry in log
                 let logEntry = document.createElement('div');
