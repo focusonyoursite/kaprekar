@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Horizon-afstand Machine</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-gradient-start: #020617;
+            --bg-gradient-end: #0f172a;
+            --card-bg: rgba(15, 23, 42, 0.7);
+            --card-border: rgba(255, 255, 255, 0.1);
+            --primary-color: #38bdf8; /* Blue */
+            --primary-hover: #0ea5e9;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --ocean-color: #075985;
+            --sky-color: #0c4a6e;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: linear-gradient(135deg, var(--bg-gradient-start) 0%, var(--bg-gradient-end) 100%);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            overflow: hidden;
+        }
+
+        .back-btn {
+            position: absolute; top: 30px; left: 30px; display: flex; align-items: center; gap: 8px;
+            color: var(--text-muted); text-decoration: none; font-weight: 600; transition: all 0.3s ease;
+            z-index: 10; padding: 8px 16px; border-radius: 12px; background: rgba(255,255,255,0.05); border: 1px solid var(--card-border);
+        }
+        .back-btn:hover { color: var(--primary-color); background: rgba(56, 189, 248, 0.1); border-color: var(--primary-color); transform: translateX(-5px); }
+
+        .container {
+            background: var(--card-bg); backdrop-filter: blur(20px); padding: 2.5rem; border-radius: 32px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 0 1px var(--card-border);
+            max-width: 1000px; width: 100%; z-index: 1; position: relative;
+            display: flex; flex-direction: column; gap: 1.5rem; height: 92vh;
+        }
+
+        .header { text-align: center; }
+        h1 { font-size: 2.5rem; font-weight: 800; background: linear-gradient(to right, #fff, var(--primary-color)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .subtitle { color: var(--text-muted); font-size: 1rem; }
+
+        .viz-area {
+            flex: 1; background: #000; border-radius: 24px; border: 1px solid var(--card-border);
+            position: relative; overflow: hidden; display: flex; align-items: center; justify-content: center;
+        }
+
+        canvas { width: 100%; height: 100%; cursor: crosshair; }
+
+        .controls-overlay {
+            position: absolute; bottom: 30px; left: 30px; right: 30px;
+            background: rgba(0,0,0,0.6); backdrop-filter: blur(10px);
+            padding: 2.5rem; border-radius: 24px; border: 1px solid var(--card-border);
+            display: flex; flex-direction: column; gap: 1.5rem;
+        }
+
+        .result-hud {
+            position: absolute; top: 30px; right: 30px; background: rgba(56, 189, 248, 0.1);
+            border: 1px solid var(--primary-color); padding: 20px; border-radius: 16px;
+            display: flex; flex-direction: column; gap: 5px; min-width: 200px;
+        }
+        .hud-label { font-size: 0.75rem; font-weight: 800; text-transform: uppercase; color: var(--primary-color); }
+        .hud-val { font-family: 'Space Mono'; font-size: 2rem; font-weight: 800; }
+
+        .slider-group { display: flex; flex-direction: column; gap: 10px; }
+        .slider-header { display: flex; justify-content: space-between; font-weight: 700; font-size: 0.9rem; }
+        
+        input[type="range"] {
+            width: 100%; height: 8px; border-radius: 4px; appearance: none;
+            background: rgba(255,255,255,0.1); cursor: pointer;
+        }
+        input[type="range"]::-webkit-slider-thumb {
+            appearance: none; width: 24px; height: 24px; background: var(--primary-color);
+            border-radius: 50%; border: 4px solid #fff; box-shadow: 0 0 15px var(--primary-color);
+        }
+
+        .presets { display: flex; gap: 10px; flex-wrap: wrap; }
+        .preset-btn {
+            background: rgba(255,255,255,0.05); border: 1px solid var(--card-border); color: white;
+            padding: 8px 16px; border-radius: 10px; font-size: 0.8rem; cursor: pointer; transition: 0.3s;
+            font-weight: 600;
+        }
+        .preset-btn:hover { background: var(--primary-color); border-color: var(--primary-color); color: #000; }
+        .preset-btn.active { background: var(--primary-color); border-color: var(--primary-color); color: #000; }
+
+        .info-panel {
+            background: rgba(56, 189, 248, 0.05); padding: 1rem; border-radius: 12px; border-left: 4px solid var(--primary-color);
+            line-height: 1.5; font-size: 0.9rem; color: var(--text-muted);
+        }
+        .info-panel b { color: var(--primary-color); }
+
+        .info-icon-btn {
+            background: rgba(255, 255, 255, 0.1); border: 1px solid var(--card-border); color: var(--primary-color);
+            width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+            cursor: pointer; transition: 0.3s;
+        }
+        .info-icon-btn:hover { background: var(--primary-color); color: #000; transform: scale(1.1); }
+
+        /* Modal */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(15, 23, 42, 0.85);
+            backdrop-filter: blur(10px); z-index: 100; display: flex; justify-content: center; align-items: center;
+            opacity: 0; pointer-events: none; transition: 0.3s; padding: 20px;
+        }
+        .modal-overlay.active { opacity: 1; pointer-events: all; }
+        .modal-content {
+            background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 24px; padding: 2.5rem;
+            max-width: 550px; width: 100%; color: var(--text-main); transform: scale(0.9); transition: 0.3s;
+        }
+    </style>
+</head>
+<body>
+
+    <a href="index.html" class="back-btn">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+        Bibliotheek
+    </a>
+
+    <div class="container">
+        <div class="header">
+            <div style="display:flex; align-items:center; justify-content:center; gap:15px; margin-bottom: 5px;">
+                <h1>Horizon-afstand Machine</h1>
+                <div class="info-icon-btn" onclick="toggleModal()">?</div>
+            </div>
+            <p class="subtitle">De aarde is krom! Ontdek hoe hoog je moet staan om ver te kunnen kijken.</p>
+        </div>
+
+        <div class="viz-area">
+            <canvas id="horizonCanvas"></canvas>
+            
+            <div class="result-hud">
+                <div class="hud-label" id="heightLabel">Kijker Hoogte: 1.5m</div>
+                <div class="hud-val" id="distVal">4.4 km</div>
+                <div class="hud-label">Afstand tot horizon</div>
+            </div>
+
+            <div class="controls-overlay">
+                <div class="slider-group">
+                    <div class="slider-header">
+                        <span>Hoogte aanpassen (logaritmisch)</span>
+                        <span id="heightDisplay" style="color:var(--primary-color);">1.5 meter</span>
+                    </div>
+                    <input type="range" id="heightSlider" min="0" max="1000" step="1" value="38" oninput="calculateHorizon()">
+                </div>
+                
+                <div class="presets">
+                    <button class="preset-btn" onclick="setHeight(1.5)">🏖️ Strand (1.5m)</button>
+                    <button class="preset-btn" onclick="setHeight(10)">🏢 Flat (10m)</button>
+                    <button class="preset-btn" onclick="setHeight(324)">🗼 Eiffeltoren (324m)</button>
+                    <button class="preset-btn" onclick="setHeight(8848)">⛰️ Mount Everest (8.8km)</button>
+                    <button class="preset-btn" onclick="setHeight(11000)">✈️ Vliegtuig (11km)</button>
+                    <button class="preset-btn" onclick="setHeight(400000)">🛰️ ISS (400km)</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="info-panel">
+            <b>Wiskunde-weetje:</b> De formule is best simpel! Vermenigvuldig de wortel van de hoogte (in meters) met <b>3,57</b> en je krijgt de afstand in kilometers. Probeer maar eens!
+        </div>
+    </div>
+
+    <!-- Modal -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal-content">
+            <h2 style="color: var(--primary-color); margin-bottom: 1rem;">Over de rand kijken</h2>
+            <div style="line-height:1.6; color: var(--text-muted); font-size: 0.95rem;">
+                <p>Als je op het strand staat, lijkt de aarde wel plat. Maar je kunt maar ongeveer 4,5 kilometer ver kijken. Daarna 'valt' alles over de horizon-rand!</p>
+                <br>
+                <p>Hoe hoger je komt, hoe meer je 'over de kromming' van de aarde heen kunt kijken. Daarom hebben vuurtorens lampen op grote hoogte, en stonden piraten vroeger in een nest bovenin de mast van hun schip.</p>
+                <br>
+                <p><b>ISS:</b> Vanuit het Ruimtestation ISS (op 400km hoogte) kun je meer dan 2000 kilometer ver kijken. Je kunt dan bijna heel Europa in één keer zien!</p>
+                <br>
+                <button class="preset-btn" style="width:100%; margin-top:10px; background:#fff; color:#000;" onclick="toggleModal()">Sluiten</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('horizonCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        // Earth Radius in meters
+        const R = 6371000;
+        let height = 1.6;
+
+        function toggleModal() {
+            document.getElementById('modalOverlay').classList.toggle('active');
+        }
+
+        function setHeight(h) {
+            // Reverse of the log mapping used in slider
+            // Slider value 0-1000 maps to 0.1 to 400,000 log scale
+            // Let's just solve: h = 0.1 * 10^(val/151.7) approx 
+            const val = Math.log10(h / 0.1) * (1000 / Math.log10(400000 / 0.1));
+            document.getElementById('heightSlider').value = val;
+            calculateHorizon();
+        }
+
+        function calculateHorizon() {
+            const sliderVal = document.getElementById('heightSlider').value;
+            // Map 0-1000 slider to 0.1m - 400,000m (log scale)
+            const minH = 0.1;
+            const maxH = 400000;
+            const logMin = Math.log10(minH);
+            const logMax = Math.log10(maxH);
+            const scale = (logMax - logMin) / 1000;
+            height = Math.pow(10, logMin + (scale * sliderVal));
+
+            // Formula: d = sqrt( (R + h)^2 - R^2 )
+            // Approx d = 3.57 * sqrt(h)
+            const d = Math.sqrt(Math.pow(R + height, 2) - Math.pow(R, 2)) / 1000;
+
+            // Update UI
+            document.getElementById('heightDisplay').innerText = height < 1000 ? `${height.toFixed(1)} meter` : `${(height/1000).toFixed(1)} kilometer`;
+            document.getElementById('heightLabel').innerText = `Kijker Hoogte: ${height < 1000 ? height.toFixed(1) + 'm' : (height/1000).toFixed(1) + 'km'}`;
+            document.getElementById('distVal').innerText = `${d.toFixed(1)} km`;
+
+            draw();
+        }
+
+        function draw() {
+            canvas.width = canvas.offsetWidth;
+            canvas.height = canvas.offsetHeight;
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            const cx = canvas.width / 2;
+            const cy = canvas.height + 200; // Earth center below
+            
+            // Draw Earth
+            // Scale Earth radius for visualization (not realistic scale obviously)
+            // As height increases, we zoom out
+            const zoomScale = height < 10 ? 1 : height < 1000 ? 0.5 : height < 10000 ? 0.1 : 0.01;
+            const vizR = 800 + (1 / zoomScale) * 0.1;
+            
+            const gradient = ctx.createRadialGradient(cx, cy, vizR * 0.8, cx, cy, vizR);
+            gradient.addColorStop(0, '#075985');
+            gradient.addColorStop(1, '#0ea5e9');
+            
+            ctx.beginPath();
+            ctx.arc(cx, cy, vizR, 0, Math.PI * 2);
+            ctx.fillStyle = gradient;
+            ctx.fill();
+            
+            // Draw Atmos
+            ctx.beginPath();
+            ctx.arc(cx, cy, vizR + 20, 0, Math.PI * 2);
+            ctx.strokeStyle = 'rgba(56, 189, 248, 0.2)';
+            ctx.lineWidth = 40;
+            ctx.stroke();
+
+            // Draw "The Lookout" dot
+            const observerY = cy - vizR - (height * 0.0001 * (1/zoomScale)); // Tiny offset for height
+            ctx.beginPath();
+            ctx.arc(cx, observerY, 5, 0, Math.PI * 2);
+            ctx.fillStyle = '#fff';
+            ctx.shadowBlur = 10;
+            ctx.shadowColor = '#fff';
+            ctx.fill();
+
+            // Draw Tangent (Horizon line)
+            ctx.beginPath();
+            ctx.moveTo(cx, observerY);
+            // Angle based on height
+            const theta = Math.acos(R / (R + height));
+            const angleDeg = theta * (180/Math.PI) * 20; // dramatized
+            
+            ctx.lineTo(cx + 400, observerY + (angleDeg * 10));
+            ctx.strokeStyle = 'rgba(255,255,255,0.3)';
+            ctx.setLineDash([5, 5]);
+            ctx.stroke();
+            ctx.setLineDash([]);
+        }
+
+        window.addEventListener('resize', draw);
+        // Initial calc
+        calculateHorizon();
+
+    </script>
+</body>
+</html>
