@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>De Geheime Natuurcode (Gulden Snede)</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-gradient-start: #0f172a;
+            --bg-gradient-end: #1e293b;
+            --card-bg: rgba(30, 41, 59, 0.7);
+            --card-border: rgba(255, 255, 255, 0.1);
+            --primary-color: #fcd34d; /* Golden */
+            --primary-hover: #fbbf24;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --accent-color: #2dd4bf; /* Teal */
+            --chart-bg: rgba(0,0,0,0.3);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: linear-gradient(135deg, var(--bg-gradient-start) 0%, var(--bg-gradient-end) 100%);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 40px 20px;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        .back-btn {
+            position: absolute; top: 30px; left: 30px; color: var(--text-muted); text-decoration: none; display: flex; align-items: center; gap: 8px; font-weight: 600; transition: color 0.3s;
+        }
+        .back-btn:hover { color: white; }
+
+        /* Golden Spiral Background Visuals */
+        .bg-shape {
+            position: absolute; filter: blur(80px); z-index: 0; border-radius: 50%; opacity: 0.4; animation: float 10s infinite ease-in-out alternate;
+        }
+        .shape-1 { width: 300px; height: 300px; background: var(--primary-color); top: -50px; left: -50px; animation-delay: 0s; }
+        .shape-2 { width: 400px; height: 400px; background: var(--accent-color); bottom: -100px; right: -100px; animation-delay: -5s; }
+
+        @keyframes float {
+            0% { transform: translateY(0) scale(1); }
+            100% { transform: translateY(30px) scale(1.1); }
+        }
+
+        .container {
+            background: var(--card-bg); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); padding: 3rem; border-radius: 20px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 0 1px var(--card-border); max-width: 900px; width: 100%; z-index: 1; display: flex; flex-direction: column; gap: 1.5rem; transform: translateY(20px); opacity: 0; animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+        @keyframes slideUp { to { transform: translateY(0); opacity: 1; } }
+
+        .header { text-align: center; }
+        .title-container { display: flex; align-items: center; justify-content: center; gap: 12px; margin-bottom: 0.5rem; }
+        h1 { font-size: 2.2rem; font-weight: 800; background: linear-gradient(to right, #fff, var(--primary-color)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 0; letter-spacing: -0.02em; }
+        p.subtitle { color: var(--text-muted); font-size: 0.95rem; line-height: 1.5; }
+
+        .info-btn {
+            background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.2); color: var(--primary-color); width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.3s ease; padding: 0;
+        }
+        .info-btn:hover { background: var(--primary-color); color: #000; transform: scale(1.1); box-shadow: 0 0 15px rgba(252, 211, 77, 0.5); }
+
+        .app-grid {
+            display: grid; grid-template-columns: 1fr 2fr; gap: 2rem;
+        }
+
+        @media(max-width: 768px) { .app-grid { grid-template-columns: 1fr; } }
+
+        .controls { display: flex; flex-direction: column; gap: 1rem; }
+        .input-group label { display: block; margin-bottom: 6px; font-size: 0.85rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; font-weight: 600; }
+        input[type="number"] { width: 100%; padding: 14px; font-family: 'Space Mono', monospace; font-size: 1.2rem; background: rgba(0, 0, 0, 0.2); border: 2px solid var(--card-border); border-radius: 12px; color: white; outline: none; transition: all 0.3s ease; }
+        input[type="number"]:focus { border-color: var(--primary-color); box-shadow: 0 0 0 4px rgba(252, 211, 77, 0.15); }
+        input[type=number]::-webkit-inner-spin-button, input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+        
+        button {
+            width: 100%; padding: 16px; background: linear-gradient(to right, #fbbf24, #f59e0b); color: #000; font-family: 'Outfit', sans-serif; font-weight: 700; font-size: 1.1rem; border: none; border-radius: 12px; cursor: pointer; transition: all 0.3s ease; box-shadow: 0 4px 15px rgba(245, 158, 11, 0.3); margin-top: 10px;
+        }
+        button:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(245, 158, 11, 0.4); }
+
+        .chart-area {
+            background: var(--chart-bg); border-radius: 16px; padding: 1.5rem; display: flex; flex-direction: column; position: relative; border: 1px solid var(--card-border);
+        }
+
+        .chart-title { font-size: 1rem; font-weight: 700; color: var(--primary-color); margin-bottom: 1rem; display: flex; justify-content: space-between; }
+        .chart-phi { font-family: 'Space Mono'; font-size: 0.9rem; color: var(--text-muted); }
+
+        .graph {
+            flex: 1; min-height: 250px; position: relative; border-left: 2px solid rgba(255,255,255,0.1); border-bottom: 2px solid rgba(255,255,255,0.1);
+            display: flex; align-items: flex-end; padding-left: 10px; gap: 8px; justify-content: flex-start;
+        }
+
+        .graph-line-phi {
+            position: absolute; left: 0; width: 100%; height: 2px; background: var(--primary-color); top: 50%; /* Overwritten in JS */ z-index: 0; border-top: 2px dashed rgba(252, 211, 77, 0.5); background: transparent;
+        }
+        .phi-label {
+            position: absolute; right: -10px; transform: translateY(-50%); background: var(--primary-color); color: #000; font-family: 'Space Mono'; font-weight: 700; padding: 2px 6px; border-radius: 4px; font-size: 0.75rem; z-index: 5; box-shadow: 0 0 10px rgba(252, 211, 77, 0.5);
+        }
+
+        .bar-container { position: relative; width: 30px; height: 100%; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; z-index: 2; opacity: 0; transform: translateY(10px); transition: all 0.4s ease; }
+        .bar-container.show { opacity: 1; transform: translateY(0); }
+        .bar-dot { width: 12px; height: 12px; background: var(--accent-color); border-radius: 50%; box-shadow: 0 0 10px var(--accent-color); position: absolute; bottom: 0; transition: bottom 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        .bar-value { font-family: 'Space Mono'; font-size: 0.65rem; color: var(--text-muted); position: absolute; bottom: -20px; }
+        .bar-ratio { font-family: 'Space Mono'; font-size: 0.75rem; color: white; position: absolute; top: -25px; background: rgba(0,0,0,0.5); padding: 2px 4px; border-radius: 4px; display: none; }
+        .bar-container:hover .bar-ratio { display: block; z-index: 10; }
+
+        .log-box { margin-top: 1.5rem; background: rgba(0,0,0,0.2); padding: 15px; border-radius: 12px; height: 100px; overflow-y: auto; font-family: 'Space Mono'; font-size: 0.9rem; line-height: 1.5; color: var(--text-muted); }
+        .log-entry { margin-bottom: 5px; opacity: 0; animation: fadeIn 0.3s forwards; }
+        .log-entry span { color: white; font-weight: 700; }
+        .log-entry.magic { color: var(--primary-color); font-weight: 700; font-size: 1.05rem; }
+        
+        @keyframes fadeIn { to { opacity: 1; } }
+
+        /* Modal Styles */
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(8px); z-index: 100; display: flex; justify-content: center; align-items: center; opacity: 0; pointer-events: none; transition: opacity 0.3s ease; padding: 20px; }
+        .modal-overlay.active { opacity: 1; pointer-events: all; }
+        .modal-content { background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 20px; padding: 2rem; max-width: 500px; width: 100%; color: var(--text-main); transform: scale(0.9) translateY(20px); transition: transform 0.3s; box-shadow: 0 20px 50px rgba(0,0,0,0.5); max-height: 85vh; overflow-y: auto; }
+        .modal-overlay.active .modal-content { transform: scale(1) translateY(0); }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 1rem; }
+        .modal-header h2 { font-size: 1.5rem; color: var(--primary-color); }
+        .close-btn { background: transparent; border: none; color: var(--text-muted); padding: 4px; cursor: pointer; transition: color 0.2s; }
+        .close-btn:hover { color: white; }
+        .modal-body { line-height: 1.6; font-size: 1.05rem; }
+        .modal-body h3 { color: var(--accent-color); margin: 1.5rem 0 0.5rem 0; font-size: 1.2rem; }
+        .modal-body p { margin-bottom: 1rem; }
+    </style>
+</head>
+<body>
+
+    <div class="bg-shape shape-1"></div>
+    <div class="bg-shape shape-2"></div>
+
+    <a href="bibliotheek.html" class="back-btn">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+        Bibliotheek
+    </a>
+
+    <div class="container">
+        <div class="header">
+            <div class="title-container">
+                <h1>Gulden Snede (φ)</h1>
+                <button class="info-btn" onclick="openPopup()" title="Hoe werkt dit?">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+                </button>
+            </div>
+            <p class="subtitle">De Geheime Natuurcode: Ontdek de mysterieuze perfecte breuk van de natuur.</p>
+        </div>
+
+        <div class="app-grid">
+            <!-- Controls -->
+            <div class="controls">
+                <div class="input-group">
+                    <label>Eerste Zaadje (Getal)</label>
+                    <input type="number" id="seed1" value="1" min="1" max="100">
+                </div>
+                <div class="input-group">
+                    <label>Tweede Zaadje (Getal)</label>
+                    <input type="number" id="seed2" value="1" min="1" max="100">
+                </div>
+                <button onclick="startGrowing()" id="btn-grow">Laat Groeien 🌱</button>
+
+                <div class="log-box" id="logBox">
+                    <div style="opacity:0.5;">Wacht op zaadjes...</div>
+                </div>
+            </div>
+
+            <!-- Visualization -->
+            <div class="chart-area">
+                <div class="chart-title">
+                    <span>Groeisnelheid (Verhoudingen)</span>
+                    <span class="chart-phi">Doel ≈ 1.618</span>
+                </div>
+                <div class="graph" id="graph">
+                    <!-- The Phi perfect line -->
+                    <div class="graph-line-phi" id="phiLine" style="top: 50%"><div class="phi-label">φ (1.618)</div></div>
+                    <!-- Dots will be appended here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Info Modal -->
+    <div class="modal-overlay" id="helpModal" onclick="if(event.target === this) closePopup()">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Het Magische Groeirecept 🌿</h2>
+                <button class="close-btn" onclick="closePopup()">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p>Natuur is ontzettend slim in wiskunde! Hoe groeien de blaadjes aan een bloem, of hoe krult de vorm van een slakkenhuis?</p>
+                
+                <h3>Alles optellen!</h3>
+                <p>Ze gebruiken een simpele logica: het nieuwe blaadje is altijd net zo groot als de <b>twee vorige blaadjes bij elkaar opgeteld</b>. <br>
+                1 + 1 = 2.<br>
+                1 + 2 = 3.<br>
+                2 + 3 = 5.</p>
+                
+                <h3 style="color: var(--primary-color)">De Groei-Truc (De Gulden Snede)</h3>
+                <p>Als je dit heel lang blijft optellen, en je deelt dan één nieuw blaadje met de vorige, is de uitkomst zó bizar... <b>Het is áltijd 1,618</b>. Hoe groot of klein je bladeren ook waren toen ze begonnen. <br>Dat getal noemen we <b>Phi (φ)</b>, of <i>De Gulden Snede</i>.</p>
+                <p><b>Speel maar eens:</b><br>Kies zelf de twee gekste "startgetallen" (zaadjes) die je wil verzinnen. De computer gaat groeien, en je zal zien dat de blauwe balletjes zich zéker uiteindelijk op de gouden grens gaan vestigen!</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function openPopup() { document.getElementById('helpModal').classList.add('active'); }
+        function closePopup() { document.getElementById('helpModal').classList.remove('active'); }
+        async function sleep(ms) { return new Promise(resolve => setTimeout(resolve, ms)); }
+
+        const PHI = 1.6180339887;
+        let isGrowing = false;
+
+        async function startGrowing() {
+            if(isGrowing) return;
+            isGrowing = true;
+
+            const btn = document.getElementById('btn-grow');
+            btn.style.opacity = '0.5';
+            btn.innerText = "Bezig met groeien...";
+
+            const s1 = parseInt(document.getElementById('seed1').value) || 1;
+            const s2 = parseInt(document.getElementById('seed2').value) || 1;
+
+            const graph = document.getElementById('graph');
+            const logBox = document.getElementById('logBox');
+            
+            // Clear previous visually
+            const oldBars = graph.querySelectorAll('.bar-container');
+            oldBars.forEach(b => b.remove());
+            logBox.innerHTML = '';
+
+            let sequence = [s1, s2];
+            let ratios = [];
+
+            // We generate array
+            // Math rules: calculate 12 items
+            for(let i = 2; i < 15; i++) {
+                sequence.push(sequence[i-1] + sequence[i-2]);
+            }
+
+            for(let i = 1; i < sequence.length; i++) {
+                ratios.push(sequence[i] / sequence[i-1]);
+            }
+
+            // Calculate min max for visual chart zooming
+            let minRatio = Math.min(...ratios);
+            let maxRatio = Math.max(...ratios);
+            
+            // Add padding so Phi is nicely visible
+            let range = (maxRatio - minRatio) * 1.5; 
+            if(range < 0.2) range = 0.5; // fallback
+            
+            let chartHigh = PHI + (range / 2);
+            let chartLow = PHI - (range / 2);
+
+            // if lowest is smaller than chartLow
+            if(minRatio < chartLow) chartLow = minRatio - 0.1;
+            if(maxRatio > chartHigh) chartHigh = maxRatio + 0.1;
+
+            // Put the phi line
+            const phiPercent = Math.max(5, Math.min(95, ((PHI - chartLow) / (chartHigh - chartLow)) * 100));
+            document.getElementById('phiLine').style.top = `calc(${100 - phiPercent}%)`; // Because bottom is 0%
+
+            // Animate steps
+            for(let i = 0; i < ratios.length; i++) {
+                let ratio = ratios[i];
+                let prev = sequence[i];
+                let curr = sequence[i+1];
+
+                // Determine height
+                let dotPercent = Math.max(5, Math.min(95, ((ratio - chartLow) / (chartHigh - chartLow)) * 100));
+
+                let container = document.createElement('div');
+                container.className = 'bar-container';
+
+                let dot = document.createElement('div');
+                dot.className = 'bar-dot';
+                dot.style.bottom = `${dotPercent}%`;
+
+                let ratioTooltip = document.createElement('div');
+                ratioTooltip.className = 'bar-ratio';
+                ratioTooltip.innerText = ratio.toFixed(4);
+
+                let indexVal = document.createElement('div');
+                indexVal.className = 'bar-value';
+                indexVal.innerText = i+1;
+
+                container.appendChild(ratioTooltip);
+                container.appendChild(dot);
+                container.appendChild(indexVal);
+                graph.appendChild(container);
+
+                // Entry in log
+                let logEntry = document.createElement('div');
+                logEntry.className = 'log-entry';
+                let isLast = (i === ratios.length - 1);
+                
+                logEntry.innerHTML = `Stap ${i+1}: <span>${curr}</span> ÷ <span>${prev}</span> = ${ratio.toFixed(4)}`;
+                if(isLast) {
+                    logEntry.classList.add('magic');
+                    logEntry.innerHTML = `✨ BINGO! We raken PHI (${ratio.toFixed(5)}..) ✨`;
+                }
+                
+                logBox.appendChild(logEntry);
+                logBox.scrollTop = logBox.scrollHeight;
+
+                // Make pop up smoothly
+                await sleep(50);
+                container.classList.add('show');
+                
+                let sleepTime = 400 - (i * 20); // speeds up
+                if(sleepTime < 100) sleepTime = 100;
+                await sleep(sleepTime);
+            }
+
+            btn.style.opacity = '1';
+            btn.innerText = "Opnieuw Groeien! 🌱";
+            isGrowing = false;
+        }
+    </script>
+</body>
+</html>
