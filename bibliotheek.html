@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>De Machine-Bibliotheek voor Jonah</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-gradient-start: #0f172a;
+            --bg-gradient-end: #1e293b;
+            --card-bg: rgba(30, 41, 59, 0.7);
+            --card-border: rgba(255, 255, 255, 0.1);
+            --primary-color: #3b82f6;
+            --primary-hover: #2563eb;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --accent-color: #8b5cf6;
+            --locked-bg: rgba(15, 23, 42, 0.6);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: linear-gradient(135deg, var(--bg-gradient-start) 0%, var(--bg-gradient-end) 100%);
+            color: var(--text-main);
+            min-height: 100vh;
+            padding: 40px 20px;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        /* Abstract background shapes */
+        .bg-shape {
+            position: fixed;
+            filter: blur(100px);
+            z-index: -1;
+            border-radius: 50%;
+            opacity: 0.4;
+            animation: float 15s infinite ease-in-out alternate;
+        }
+        
+        .shape-1 { width: 50vw; height: 50vw; background: var(--accent-color); top: -20%; left: -10%; animation-delay: 0s; }
+        .shape-2 { width: 40vw; height: 40vw; background: var(--primary-color); bottom: -10%; right: -10%; animation-delay: -5s; }
+
+        @keyframes float {
+            0% { transform: translateY(0) scale(1); }
+            100% { transform: translateY(50px) scale(1.1); }
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 4rem;
+            animation: slideDown 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+            opacity: 0;
+            transform: translateY(-20px);
+        }
+
+        @keyframes slideDown {
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        h1 {
+            font-size: 3.5rem;
+            font-weight: 800;
+            background: linear-gradient(to right, #fff, var(--primary-color));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 1rem;
+            letter-spacing: -0.03em;
+        }
+
+        p.subtitle {
+            color: var(--text-muted);
+            font-size: 1.2rem;
+            max-width: 600px;
+            margin: 0 auto;
+            line-height: 1.6;
+        }
+
+        .category-container {
+            max-width: 1200px;
+            margin: 0 auto 4rem auto;
+            opacity: 0;
+            transform: translateY(20px);
+            animation: slideUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+            animation-delay: 0.2s;
+        }
+
+        @keyframes slideUp {
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .category-title {
+            font-size: 1.8rem;
+            color: var(--text-main);
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            border-bottom: 2px solid rgba(255,255,255,0.05);
+            padding-bottom: 15px;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .card {
+            background: var(--card-bg);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid var(--card-border);
+            border-radius: 16px;
+            padding: 1.5rem;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            text-decoration: none;
+            color: var(--text-main);
+        }
+
+        .card.active {
+            cursor: pointer;
+            box-shadow: 0 10px 30px rgba(59, 130, 246, 0.15);
+        }
+
+        .card.active:hover {
+            transform: translateY(-8px) scale(1.02);
+            border-color: var(--primary-color);
+            box-shadow: 0 20px 40px rgba(59, 130, 246, 0.3);
+        }
+
+        .card.locked {
+            background: var(--locked-bg);
+            cursor: not-allowed;
+        }
+
+        .card.locked::before {
+            content: 'Binnenkort';
+            position: absolute;
+            top: 15px;
+            right: -30px;
+            background: rgba(255,255,255,0.1);
+            color: var(--text-muted);
+            font-size: 0.7rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            padding: 4px 30px;
+            transform: rotate(45deg);
+            letter-spacing: 1px;
+            border: 1px dashed rgba(255,255,255,0.2);
+        }
+
+        .card-icon {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            filter: drop-shadow(0 4px 6px rgba(0,0,0,0.3));
+        }
+
+        .card.locked .card-icon {
+            opacity: 0.5;
+            filter: grayscale(100%);
+        }
+
+        .card h3 {
+            font-size: 1.2rem;
+            margin-bottom: 0.5rem;
+            font-weight: 700;
+        }
+
+        .card.locked h3 {
+            color: var(--text-muted);
+        }
+
+        .card p {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            line-height: 1.5;
+            flex-grow: 1;
+        }
+
+        .card.active .play-btn {
+            margin-top: 1.5rem;
+            background: linear-gradient(to right, var(--primary-color), var(--accent-color));
+            color: white;
+            font-family: 'Outfit', sans-serif;
+            font-weight: 600;
+            padding: 10px;
+            border-radius: 8px;
+            text-align: center;
+            opacity: 0.9;
+            transition: opacity 0.3s;
+        }
+
+        .card.active:hover .play-btn {
+            opacity: 1;
+        }
+
+        @media (max-width: 768px) {
+            h1 { font-size: 2.5rem; }
+            .grid { grid-template-columns: 1fr; }
+            .category-container { margin-bottom: 3rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="bg-shape shape-1"></div>
+    <div class="bg-shape shape-2"></div>
+
+    <div class="header">
+        <h1>De Machine-Bibliotheek</h1>
+        <p class="subtitle">Een verzameling van interactieve, speelbare concepten voor Jonah. Van rekenraadsels tot natuurverschijnselen, in kleine machines gegoten.</p>
+    </div>
+
+    <div id="library-container"></div>
+
+    <script>
+        const conceptData = [
+            {
+                category: "Wiskunde & Logica",
+                icon: "🔢",
+                machines: [
+                    { title: "Kaprekar Machine", desc: "Het magische zwarte gat van 6174 ontrafeld.", status: "active", link: "index.html", icon: "✨" },
+                    { title: "De Regel van 72", desc: "Bereken razendsnel hoelang het duurt om waarden te verdubbelen.", status: "locked", icon: "📈" },
+                    { title: "Wet van Benford", desc: "Onderzoek de vreemde dominantie van het cijfer 1 in data.", status: "locked", icon: "1️⃣" },
+                    { title: "Binaire Klok", desc: "Leer de tijd aflezen in computertaal: enen en nullen.", status: "locked", icon: "⏱️" },
+                    { title: "Gulden Snede (φ)", desc: "De goddelijke verhouding in de natuur en architectuur.", status: "locked", icon: "🐚" },
+                    { title: "Magisch Vierkant", desc: "Puzzel met ruiters die altijd op hetzelfde getal optellen.", status: "locked", icon: "🧮" },
+                    { title: "Verjaardagsparadox", desc: "De vreemde kansberekening van dubbele verjaardagen.", status: "locked", icon: "🎂" },
+                    { title: "Ulam-spiraal", desc: "Visualiseer de patronen in mysterieuze priemgetallen.", status: "locked", icon: "🌀" },
+                    { title: "Steen-Papier-Schaar", desc: "Ontdek de Nash-evenwicht strategie van het bekende spel.", status: "locked", icon: "✂️" },
+                    { title: "Pascal's Driehoek", desc: "Vind eindeloze patronen en combinaties in getallen.", status: "locked", icon: "🔺" },
+                    { title: "Lissajous-figuren", desc: "Maak prachtige golvende harmonische trillingsobjecten.", status: "locked", icon: "〰️" }
+                ]
+            },
+            {
+                category: "Aardrijkskunde & Natuur",
+                icon: "🌍",
+                machines: [
+                    { title: "Tijdzone Machine", desc: "Speel met de zon en de datumgrens over de hele wereld.", status: "locked", icon: "🌎" },
+                    { title: "Beaufort Schaal", desc: "Meet de windkracht en zie de effecten op de omgeving.", status: "locked", icon: "🌬️" },
+                    { title: "Horizon-afstand", desc: "Bereken exact hoe ver je kunt kijken vanaf jouw hoogte.", status: "locked", icon: "🔭" },
+                    { title: "Scovilleschaal", desc: "Test de pittigheid van 's werelds heetste chilipepers.", status: "locked", icon: "🌶️" },
+                    { title: "Richter Schaal", desc: "Simuleer de logaritmische kracht van aardbevingen.", status: "locked", icon: "🌋" },
+                    { title: "Continentale Drift", desc: "Spoel de tijd door en zie continenten racen.", status: "locked", icon: "🧩" },
+                    { title: "Bortle-schaal", desc: "Hoeveel sterren zie jij? Meet de lichtvervuiling.", status: "locked", icon: "🌌" },
+                    { title: "Onweer Afstand", desc: "Flits! Bereken hoe ver het onweer bij jou vandaan is.", status: "locked", icon: "⚡" },
+                    { title: "Albedo-effect", desc: "Speel met lichtreflectie op ijs, water en land.", status: "locked", icon: "🧊" },
+                    { title: "Corioliseffect", desc: "De draaiing van de aarde die orkanen laat tollen.", status: "locked", icon: "🌪️" }
+                ]
+            },
+            {
+                category: "Taal & Communicatie",
+                icon: "✍️",
+                machines: [
+                    { title: "Morse Code Knopper", desc: "Communiceer met ritmische licht- en geluidspulsen.", status: "locked", icon: "📻" },
+                    { title: "NAVO Vertaler", desc: "Helder spellen via de radio (Alpha, Bravo, Charlie).", status: "locked", icon: "🚁" },
+                    { title: "Palindroom Logica", desc: "Ontdek woorden en zinnen die omkeerbaar zijn.", status: "locked", icon: "🔁" },
+                    { title: "Anagram Architect", desc: "Herschik letters om verborgen betekenissen te vinden.", status: "locked", icon: "🔠" },
+                    { title: "Lipogram Controle", desc: "Schrijf een heel verhaal zonder één specifieke letter.", status: "locked", icon: "🚫" },
+                    { title: "Letterfrequentie", desc: "Kraak codes door taal-statistieken te analyseren.", status: "locked", icon: "📊" },
+                    { title: "Leesbaarheidsindex", desc: "Bereken hoe moeilijk teksten eigenlijk geschreven zijn.", status: "locked", icon: "📚" },
+                    { title: "Pig Latin Tolk", desc: "De regels van een eeuwenoude geheimtaal vertaald.", status: "locked", icon: "🐷" },
+                    { title: "Haiku Analyzer", desc: "Lettergrepen tellen en klassieke 5-7-5 gedichten maken.", status: "locked", icon: "🌸" },
+                    { title: "Etymologie Roots", desc: "Graaf naar de oeroude wortels van moderne woorden.", status: "locked", icon: "🌳" }
+                ]
+            },
+            {
+                category: "Technologie & Wetenschap",
+                icon: "🚀",
+                machines: [
+                    { title: "ASCII Generator", desc: "Weef prachtige beelden van data en stukjes tekst.", status: "locked", icon: "👾" },
+                    { title: "Ontsnappingssnelheid", desc: "Hoeveel raketkracht kost het om de aarde te verlaten?", status: "locked", icon: "🚀" },
+                    { title: "Turing Test", desc: "Stel de grenzen vast: kan software echt zelf denken?", status: "locked", icon: "🤖" },
+                    { title: "Halfwaardetijd", desc: "Kijk hoe atomen langzaam maar zeker afnemen (verval).", status: "locked", icon: "☢️" },
+                    { title: "RGB Kleurmixer", desc: "Additieve kleurmenging om elk licht te produceren.", status: "locked", icon: "🎨" },
+                    { title: "Wet van Ohm", desc: "Spanning, stroom en weerstand in actie (V = I x R).", status: "locked", icon: "⚡" },
+                    { title: "Zwaartekracht Machine", desc: "Weeg jezelf in te toekomst op Mars of Jupiter.", status: "locked", icon: "🪐" },
+                    { title: "Binary Search", desc: "Speel getallen raden met supersnelle zoek-algoritmes.", status: "locked", icon: "🔍" },
+                    { title: "Absolute Nulpunt", desc: "Van Kelvin naar Celsius in stervende kou.", status: "locked", icon: "❄️" },
+                    { title: "Doppler-effect", desc: "Waarom sirenes anders klinken als ze voorbij racen.", status: "locked", icon: "🚑" }
+                ]
+            }
+        ];
+
+        const container = document.getElementById('library-container');
+
+        conceptData.forEach((section, index) => {
+            const sectionDiv = document.createElement('div');
+            sectionDiv.className = 'category-container';
+            sectionDiv.style.animationDelay = `${0.2 + (index * 0.1)}s`;
+
+            sectionDiv.innerHTML = `
+                <h2 class="category-title">${section.icon} ${section.category}</h2>
+                <div class="grid">
+                    ${section.machines.map(m => `
+                        ${m.status === 'active' ? `<a href="${m.link}" class="card active">` : `<div class="card locked">`}
+                            <div class="card-icon">${m.icon}</div>
+                            <h3>${m.title}</h3>
+                            <p>${m.desc}</p>
+                            ${m.status === 'active' ? `<div class="play-btn">Start Machine</div>` : ''}
+                        ${m.status === 'active' ? `</a>` : `</div>`}
+                    `).join('')}
+                </div>
+            `;
+            container.appendChild(sectionDiv);
+        });
+    </script>
+</body>
+</html>
