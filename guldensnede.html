@@ -246,6 +246,8 @@
                     let dRatio = parseFloat(container.dataset.ratio);
                     if(!isNaN(dRatio)) {
                         let dPercent = ((dRatio - chartLow) / (chartHigh - chartLow)) * 100;
+                        // Clampen zorgt dat ze gered worden van de 'void' en op de rand blijven rusten!
+                        dPercent = Math.max(3, Math.min(97, dPercent));
                         let dot = container.querySelector('.bar-dot');
                         if (dot) dot.style.bottom = `${dPercent}%`;
                     }
