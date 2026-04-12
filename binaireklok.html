@@ -162,7 +162,6 @@
             background: var(--bit-on);
             border-color: var(--bit-on);
             box-shadow: 0 0 15px var(--bit-on-glow), inset 0 0 10px rgba(255,255,255,0.5);
-            color: white;
         }
 
         /* Show numbers when cheat mode is on */
@@ -173,6 +172,7 @@
             color: white;
             text-shadow: 0 0 5px rgba(0,0,0,0.5);
         }
+
 
         .section-label {
             text-align: center;
@@ -301,28 +301,29 @@
     <div class="modal-overlay" id="helpModal" onclick="if(event.target === this) closePopup()">
         <div class="modal-content">
             <div class="modal-header">
-                <h2>Lezen als een Robot 🤖</h2>
+                <h2>Computertaal voor Jonah 🤖</h2>
                 <button class="close-btn" onclick="closePopup()">
                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
                 </button>
             </div>
             <div class="modal-body">
-                <p>Mensen (zoals jij en ik) rekenen met 10 vingers. Maar computers hebben hélemaal geen vingers. Het enige dat een computer kan voelen is: <b>"Stroom AAN = 1"</b> of <b>"Stroom UIT = 0"</b>.</p>
+                <p>Computers begrijpen onze normale cijfers (1, 2, 3...) helemaal niet. Ze hebben aan de binnenkant alleen maar hele kleine schakelaartjes die <b>AAN (kleur)</b> of <b>UIT (donker)</b> staan. Dat heet <i>Binair</i>.</p>
                 
-                <h3>Elk lampje is een verdubbelaar</h3>
-                <p>Elk zuiltje lampjes bouwt van onder naar boven op. Het onderste lampje is altijd <b>1</b> waard. Het lampje erboven verdubbelt! En die daarboven verdubbelt weer!</p>
+                <h3>Hoe werken de bolletjes?</h3>
+                <p>De klok heeft 6 kolommen. Elke kolom stelt precies <b>één enkel cijfer</b> van de gewone klok voor! Dus de eerste twee kolommen zijn samen de uren (bijv <b>1</b> en <b>4</b> wordt 14:00).</p>
+                
+                <p>Je leest een kolom bolletjes áltijd van onder naar boven:</p>
                 <ul>
-                    <li>Lampje 1 (onder): Waarde 1</li>
-                    <li>Lampje 2: Waarde 2</li>
-                    <li>Lampje 3: Waarde 4</li>
-                    <li>Lampje 4 (boven): Waarde 8</li>
+                    <li>Het <b>onderste bolletje</b> is altijd <b>1</b> waard.</li>
+                    <li>Het bolletje daarboven is het dubbele: <b>2</b>.</li>
+                    <li>Het bolletje dáárboven is weer het dubbele: <b>4</b>.</li>
+                    <li>En het bovenste bolletje is <b>8</b> waard.</li>
                 </ul>
                 
-                <h3 style="color: var(--primary-color)">Hoe lees je het? (De Spelregel)</h3>
-                <p>Heel simpel: Tel gewoon de waarden op van de lampjes die <b>AAN</b> staan!<br>
-                Brandt het onderste lampje (1) en de tweede (2)? Dan is het 1 + 2 = <b>3</b>. <br>
-                Brandt alleen de bovenste? Dan is het <b>8</b>.</p>
-                <p><i>Kusje van de ontwerper: klik op 'Spiekbriefje' om de getallen in de lampjes te zien als je er niet uit komt!</i></p>
+                <h3 style="color: var(--primary-color)">Tel de gekleurde bolletjes op!</h3>
+                <p>Als een bolletje licht geeft, tel je dat getal mee.<br>
+                Brandt bijvoorbeeld het onderste bolletje (1) én de tweede van onder (2)? Dan is dat samen 1 + 2 = <b>3</b>!<br>
+                Brandt de bovenste (8) en de onderste (1)? Dan is het 8 + 1 = <b>9</b>.</p>
             </div>
         </div>
     </div>
