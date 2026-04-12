@@ -264,7 +264,7 @@
             ctx.arc(x, y, 5 + pulse, 0, Math.PI * 2);
             ctx.fillStyle = '#fff';
             ctx.shadowBlur = 15 + pulse * 2;
-            ctx.shadowColor = var(--primary-color);
+            ctx.shadowColor = '#22d3ee';
             ctx.fill();
             ctx.shadowBlur = 0;
 
@@ -276,11 +276,10 @@
             document.getElementById('modalOverlay').classList.toggle('active');
         }
 
-        // Use root variables in JS
-        const rootStyles = getComputedStyle(document.documentElement);
-        function var(name) { return rootStyles.getPropertyValue(name).trim(); }
-
-        animate();
+        // Wait for styles to load
+        window.addEventListener('load', () => {
+            animate();
+        });
     </script>
 </body>
 </html>
