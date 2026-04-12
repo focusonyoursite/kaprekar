@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Magisch Vierkant Machine</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-gradient-start: #0f172a;
+            --bg-gradient-end: #1e293b;
+            --card-bg: rgba(30, 41, 59, 0.7);
+            --card-border: rgba(255, 255, 255, 0.1);
+            --primary-color: #fbbf24; /* Golden */
+            --primary-hover: #f59e0b;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --accent-color: #8b5cf6;
+            --success-color: #10b981;
+            --error-color: #ef4444;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: linear-gradient(135deg, var(--bg-gradient-start) 0%, var(--bg-gradient-end) 100%);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        .bg-shape { position: absolute; filter: blur(80px); z-index: 0; border-radius: 50%; opacity: 0.4; animation: float 10s infinite ease-in-out alternate; }
+        .shape-1 { width: 400px; height: 400px; background: var(--accent-color); top: -100px; left: -100px; }
+        .shape-2 { width: 300px; height: 300px; background: var(--primary-color); bottom: -50px; right: -50px; animation-delay: -5s; }
+        @keyframes float { 0% { transform: translateY(0) scale(1); } 100% { transform: translateY(30px) scale(1.1); } }
+
+        .back-btn {
+            position: absolute; top: 30px; left: 30px; display: flex; align-items: center; gap: 8px;
+            color: var(--text-muted); text-decoration: none; font-weight: 600; transition: all 0.3s ease;
+            z-index: 10; padding: 8px 16px; border-radius: 12px; background: rgba(255,255,255,0.05); border: 1px solid var(--card-border);
+        }
+        .back-btn:hover { color: var(--primary-color); background: rgba(252, 211, 77, 0.1); border-color: var(--primary-color); transform: translateX(-5px); }
+
+        .container {
+            background: var(--card-bg); backdrop-filter: blur(16px); padding: 3rem; border-radius: 24px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 0 1px var(--card-border);
+            max-width: 800px; width: 100%; z-index: 1; position: relative;
+            display: flex; flex-direction: column; gap: 2rem;
+        }
+
+        .header { text-align: center; }
+        h1 { font-size: 2.5rem; font-weight: 800; background: linear-gradient(to right, #fff, var(--primary-color)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 0.5rem; }
+        .subtitle { color: var(--text-muted); font-size: 1.1rem; }
+
+        .app-layout { display: flex; flex-direction: column; gap: 2rem; align-items: center; }
+
+        .magic-square-wrapper { position: relative; padding: 40px; background: rgba(0,0,0,0.2); border-radius: 20px; border: 1px solid var(--card-border); transition: all 0.5s ease; }
+        .magic-square-wrapper.solved { border-color: var(--success-color); box-shadow: 0 0 30px rgba(16, 185, 129, 0.3); }
+
+        .grid-container {
+            display: grid; grid-template-columns: repeat(3, 80px); grid-template-rows: repeat(3, 80px); gap: 15px;
+            position: relative;
+        }
+
+        .cell {
+            width: 80px; height: 80px; background: rgba(255,255,255,0.05); border: 2px solid var(--card-border);
+            border-radius: 12px; display: flex; justify-content: center; align-items: center;
+            font-family: 'Space Mono', monospace; font-size: 1.8rem; font-weight: 700; color: white;
+            transition: all 0.3s ease; outline: none; text-align: center;
+        }
+        .cell:focus { border-color: var(--primary-color); background: rgba(252, 211, 77, 0.1); box-shadow: 0 0 15px rgba(252, 211, 77, 0.2); }
+        .cell::-webkit-inner-spin-button, .cell::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+
+        /* Sum indicators */
+        .sum-indicator {
+            position: absolute; font-family: 'Space Mono'; font-size: 0.9rem; font-weight: 700;
+            color: var(--text-muted); display: flex; align-items: center; justify-content: center;
+            transition: all 0.3s ease;
+        }
+        .sum-indicator.valid { color: var(--primary-color); text-shadow: 0 0 10px var(--primary-color); }
+
+        /* Row sums */
+        .row-sum-0 { right: -35px; top: 25px; }
+        .row-sum-1 { right: -35px; top: 120px; }
+        .row-sum-2 { right: -35px; top: 215px; }
+
+        /* Col sums */
+        .col-sum-0 { bottom: -35px; left: 25px; }
+        .col-sum-1 { bottom: -35px; left: 120px; }
+        .col-sum-2 { bottom: -35px; left: 215px; }
+
+        /* Diagonal sums */
+        .diag-sum-0 { top: -35px; left: -35px; } /* Main diag */
+        .diag-sum-1 { top: -35px; right: -35px; } /* Anti diag */
+
+        .controls { display: flex; gap: 1rem; width: 100%; justify-content: center; }
+        button {
+            padding: 12px 24px; border-radius: 12px; border: none; font-family: 'Outfit'; font-weight: 700;
+            cursor: pointer; transition: all 0.3s ease; font-size: 1rem;
+        }
+        .primary-btn { background: linear-gradient(to right, #fbbf24, #f59e0b); color: #000; box-shadow: 0 4px 15px rgba(245, 158, 11, 0.3); }
+        .primary-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(245, 158, 11, 0.4); }
+        .secondary-btn { background: rgba(255,255,255,0.1); color: white; border: 1px solid var(--card-border); }
+        .secondary-btn:hover { background: rgba(255,255,255,0.2); }
+
+        .info-panel {
+            background: rgba(0,0,0,0.2); padding: 1.5rem; border-radius: 16px; border-left: 4px solid var(--primary-color);
+            line-height: 1.6; font-size: 0.95rem; color: var(--text-muted); width: 100%;
+        }
+        .info-panel b { color: var(--primary-color); }
+
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(15, 23, 42, 0.8);
+            backdrop-filter: blur(8px); z-index: 100; display: flex; justify-content: center; align-items: center;
+            opacity: 0; pointer-events: none; transition: opacity 0.3s ease; padding: 20px;
+        }
+        .modal-overlay.active { opacity: 1; pointer-events: all; }
+        .modal-content {
+            background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 20px; padding: 2rem;
+            max-width: 500px; width: 100%; color: var(--text-main); transform: scale(0.9) translateY(20px);
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+        }
+        .modal-overlay.active .modal-content { transform: scale(1) translateY(0); }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 1rem; }
+        .modal-header h2 { font-size: 1.5rem; color: var(--primary-color); }
+        .close-btn { background: transparent; border: none; color: var(--text-muted); cursor: pointer; font-size: 1.5rem; }
+
+        .status-msg { font-weight: 700; font-size: 1.1rem; text-align: center; height: 24px; }
+        .status-msg.success { color: var(--success-color); animation: pulse 1s infinite alternate; }
+        @keyframes pulse { from { opacity: 0.6; transform: scale(1); } to { opacity: 1; transform: scale(1.05); } }
+
+        .info-icon-btn {
+            background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.2); color: var(--primary-color);
+            width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+            cursor: pointer; transition: all 0.3s ease;
+        }
+        .info-icon-btn:hover { background: var(--primary-color); color: #000; transform: scale(1.1); box-shadow: 0 0 15px rgba(252, 211, 77, 0.5); }
+    </style>
+</head>
+<body>
+
+    <a href="index.html" class="back-btn">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+        Bibliotheek
+    </a>
+
+    <div class="bg-shape shape-1"></div>
+    <div class="bg-shape shape-2"></div>
+
+    <div class="container">
+        <div class="header">
+            <div style="display:flex; align-items:center; justify-content:center; gap:15px; margin-bottom:10px;">
+                <h1>Magisch Vierkant</h1>
+                <div class="info-icon-btn" onclick="toggleModal()">?</div>
+            </div>
+            <p class="subtitle">Zorg dat elke rij, kolom en diagonaal op <b>15</b> uitkomt!</p>
+        </div>
+
+        <div class="app-layout">
+            <div id="status" class="status-msg"></div>
+
+            <div class="magic-square-wrapper" id="squareWrapper">
+                <div class="grid-container" id="grid">
+                    <!-- Cells -->
+                    <input type="number" class="cell" data-idx="0" min="1" max="9" oninput="updateSums()">
+                    <input type="number" class="cell" data-idx="1" min="1" max="9" oninput="updateSums()">
+                    <input type="number" class="cell" data-idx="2" min="1" max="9" oninput="updateSums()">
+                    <input type="number" class="cell" data-idx="3" min="1" max="9" oninput="updateSums()">
+                    <input type="number" class="cell" data-idx="4" min="1" max="9" oninput="updateSums()">
+                    <input type="number" class="cell" data-idx="5" min="1" max="9" oninput="updateSums()">
+                    <input type="number" class="cell" data-idx="6" min="1" max="9" oninput="updateSums()">
+                    <input type="number" class="cell" data-idx="7" min="1" max="9" oninput="updateSums()">
+                    <input type="number" class="cell" data-idx="8" min="1" max="9" oninput="updateSums()">
+
+                    <!-- Sum Indicators -->
+                    <div class="sum-indicator row-sum-0" id="row-0">0</div>
+                    <div class="sum-indicator row-sum-1" id="row-1">0</div>
+                    <div class="sum-indicator row-sum-2" id="row-2">0</div>
+
+                    <div class="sum-indicator col-sum-0" id="col-0">0</div>
+                    <div class="sum-indicator col-sum-1" id="col-1">0</div>
+                    <div class="sum-indicator col-sum-2" id="col-2">0</div>
+
+                    <div class="sum-indicator diag-sum-0" id="diag-0">0</div>
+                    <div class="sum-indicator diag-sum-1" id="diag-1">0</div>
+                </div>
+            </div>
+
+            <div class="controls">
+                <button class="secondary-btn" onclick="clearGrid()">Vierkant Wissen</button>
+                <button class="primary-btn" onclick="solveOne()">Geef hint ✨</button>
+                <button class="primary-btn" onclick="autoSolve()">Los helemaal op! 🧙‍♂️</button>
+            </div>
+
+            <div class="info-panel">
+                Wist je dat? Een 3x3 magisch vierkant gebruikt de getallen <b>1 t/m 9</b> precies één keer. De magische constante is altijd <b>15</b>. Zie je hoe de getallen dansen om in balans te blijven?
+            </div>
+        </div>
+    </div>
+
+    <!-- Info Modal -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Wat is een Magisch Vierkant?</h2>
+                <button class="close-btn" onclick="toggleModal()">&times;</button>
+            </div>
+            <div style="line-height:1.6; color: var(--text-muted);">
+                <p>Een magisch vierkant is een puzzel die al duizenden jaren oud is! Het beroemdste verhaal komt uit China, over de <b>Luo Shu</b> schildpad die uit een rivier kwam met dit patroon op zijn schild.</p>
+                <br>
+                <p><b>De regels:</b></p>
+                <ul style="padding-left: 20px; margin-top:10px;">
+                    <li>Gebruik de getallen 1, 2, 3, 4, 5, 6, 7, 8, en 9.</li>
+                    <li>Gebruik elk getal maar <b>één keer</b>.</li>
+                    <li>De som van elke rij, kolom en diagonaal moet <b>15</b> zijn.</li>
+                </ul>
+                <br>
+                <p>In deze machine kun je zelf proberen het vierkant op te lossen. De getallen kleuren goud als ze de 15 raken!</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const TARGET_SUM = 15;
+        const cells = document.querySelectorAll('.cell');
+        const status = document.getElementById('status');
+        const wrapper = document.getElementById('squareWrapper');
+
+        function toggleModal() {
+            document.getElementById('modalOverlay').classList.toggle('active');
+        }
+
+        function clearGrid() {
+            cells.forEach(c => c.value = '');
+            updateSums();
+            status.innerText = '';
+            wrapper.classList.remove('solved');
+        }
+
+        function updateSums() {
+            const vals = Array.from(cells).map(c => parseInt(c.value) || 0);
+            
+            // Collect sums
+            const rowSums = [
+                vals[0] + vals[1] + vals[2],
+                vals[3] + vals[4] + vals[5],
+                vals[6] + vals[7] + vals[8]
+            ];
+            const colSums = [
+                vals[0] + vals[3] + vals[6],
+                vals[1] + vals[4] + vals[7],
+                vals[2] + vals[5] + vals[8]
+            ];
+            const diagSums = [
+                vals[0] + vals[4] + vals[8],
+                vals[2] + vals[4] + vals[6]
+            ];
+
+            // Update indicators
+            rowSums.forEach((s, i) => {
+                const el = document.getElementById(`row-${i}`);
+                el.innerText = s;
+                el.classList.toggle('valid', s === TARGET_SUM);
+            });
+            colSums.forEach((s, i) => {
+                const el = document.getElementById(`col-${i}`);
+                el.innerText = s;
+                el.classList.toggle('valid', s === TARGET_SUM);
+            });
+            diagSums.forEach((s, i) => {
+                const el = document.getElementById(`diag-${i}`);
+                el.innerText = s;
+                el.classList.toggle('valid', s === TARGET_SUM);
+            });
+
+            // Check for duplicates
+            const filtered = vals.filter(v => v > 0);
+            const hasDupes = new Set(filtered).size !== filtered.length;
+            const anyWrongRange = filtered.some(v => v < 1 || v > 9);
+
+            if (hasDupes) {
+                status.innerText = "⚠️ Oeps! Elk getal mag maar één keer.";
+                status.style.color = "var(--error-color)";
+            } else if (anyWrongRange) {
+                status.innerText = "⚠️ Gebruik alleen 1 t/m 9.";
+                status.style.color = "var(--error-color)";
+            } else {
+                status.innerText = "";
+            }
+
+            // check win
+            const allMatch = [...rowSums, ...colSums, ...diagSums].every(s => s === TARGET_SUM);
+            const allUsed = new Set(filtered).size === 9;
+
+            if (allMatch && allUsed) {
+                status.innerText = "✨ MAGISCH! Het vierkant is compleet! ✨";
+                status.className = "status-msg success";
+                wrapper.classList.add('solved');
+            } else {
+                status.className = "status-msg";
+                wrapper.classList.remove('solved');
+            }
+        }
+
+        function solveOne() {
+            const solution = [8, 1, 6, 3, 5, 7, 4, 9, 2];
+            let emptyIndices = [];
+            cells.forEach((c, i) => {
+                if (c.value == '' || parseInt(c.value) !== solution[i]) {
+                    emptyIndices.push(i);
+                }
+            });
+            
+            if (emptyIndices.length > 0) {
+                const rand = emptyIndices[Math.floor(Math.random() * emptyIndices.length)];
+                cells[rand].value = solution[rand];
+                cells[rand].style.animation = "pop 0.3s ease";
+                updateSums();
+            }
+        }
+
+        async function autoSolve() {
+            const solution = [8, 1, 6, 3, 5, 7, 4, 9, 2];
+            clearGrid();
+            for(let i=0; i<solution.length; i++) {
+                cells[i].value = solution[i];
+                updateSums();
+                await new Promise(r => setTimeout(r, 100));
+            }
+        }
+    </script>
+</body>
+</html>

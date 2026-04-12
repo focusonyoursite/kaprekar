@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kaprekar's Constante Machine</title>
+    <title>De Machine-Bibliotheek voor Jonah</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
@@ -17,9 +17,8 @@
             --primary-hover: #2563eb;
             --text-main: #f8fafc;
             --text-muted: #94a3b8;
-            --error-color: #ef4444;
-            --success-color: #10b981;
             --accent-color: #8b5cf6;
+            --locked-bg: rgba(15, 23, 42, 0.6);
         }
 
         * {
@@ -33,909 +32,292 @@
             background: linear-gradient(135deg, var(--bg-gradient-start) 0%, var(--bg-gradient-end) 100%);
             color: var(--text-main);
             min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 20px;
+            padding: 40px 20px;
             overflow-x: hidden;
             position: relative;
         }
 
         /* Abstract background shapes */
         .bg-shape {
-            position: absolute;
-            filter: blur(80px);
-            z-index: 0;
+            position: fixed;
+            filter: blur(100px);
+            z-index: -1;
             border-radius: 50%;
-            opacity: 0.5;
-            animation: float 10s infinite ease-in-out alternate;
+            opacity: 0.4;
+            animation: float 15s infinite ease-in-out alternate;
         }
         
-        .shape-1 {
-            width: 400px;
-            height: 400px;
-            background: var(--accent-color);
-            top: -100px;
-            left: -100px;
-            animation-delay: 0s;
-        }
-        
-        .shape-2 {
-            width: 300px;
-            height: 300px;
-            background: var(--primary-color);
-            bottom: -50px;
-            right: -50px;
-            animation-delay: -5s;
-        }
+        .shape-1 { width: 50vw; height: 50vw; background: var(--accent-color); top: -20%; left: -10%; animation-delay: 0s; }
+        .shape-2 { width: 40vw; height: 40vw; background: var(--primary-color); bottom: -10%; right: -10%; animation-delay: -5s; }
 
         @keyframes float {
             0% { transform: translateY(0) scale(1); }
-            100% { transform: translateY(30px) scale(1.1); }
-        }
-
-        .container {
-            background: var(--card-bg);
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
-            padding: 3rem;
-            border-radius: 20px;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 0 1px var(--card-border);
-            max-width: 500px;
-            width: 100%;
-            z-index: 1;
-            position: relative;
-            display: flex;
-            flex-direction: column;
-            gap: 1.5rem;
-            transform: translateY(20px);
-            opacity: 0;
-            animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-        }
-
-        @keyframes slideUp {
-            to {
-                transform: translateY(0);
-                opacity: 1;
-            }
+            100% { transform: translateY(50px) scale(1.1); }
         }
 
         .header {
             text-align: center;
+            margin-bottom: 4rem;
+            animation: slideDown 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+            opacity: 0;
+            transform: translateY(-20px);
+        }
+
+        @keyframes slideDown {
+            to { opacity: 1; transform: translateY(0); }
         }
 
         h1 {
-            font-size: 2.2rem;
+            font-size: 3.5rem;
             font-weight: 800;
             background: linear-gradient(to right, #fff, var(--primary-color));
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            margin-bottom: 0.5rem;
-            letter-spacing: -0.02em;
+            margin-bottom: 1rem;
+            letter-spacing: -0.03em;
         }
 
         p.subtitle {
             color: var(--text-muted);
-            font-size: 0.95rem;
-            line-height: 1.5;
-        }
-
-        .input-group {
-            position: relative;
-            margin-top: 1rem;
-        }
-
-        input[type="number"] {
-            width: 100%;
-            padding: 16px 20px;
-            font-family: 'Space Mono', monospace;
             font-size: 1.2rem;
-            background: rgba(0, 0, 0, 0.2);
-            border: 2px solid var(--card-border);
-            border-radius: 12px;
-            color: white;
-            outline: none;
-            transition: all 0.3s ease;
-            letter-spacing: 0.2em;
-            text-align: center;
-        }
-        
-        /* Hide arrows from number input */
-        input[type=number]::-webkit-inner-spin-button, 
-        input[type=number]::-webkit-outer-spin-button { 
-            -webkit-appearance: none; 
-            margin: 0; 
-        }
-        input[type=number] {
-            -moz-appearance: textfield;
-            appearance: textfield;
+            max-width: 600px;
+            margin: 0 auto;
+            line-height: 1.6;
         }
 
-        input[type="number"]:focus {
+        .category-container {
+            max-width: 1200px;
+            margin: 0 auto 4rem auto;
+            opacity: 0;
+            transform: translateY(20px);
+            animation: slideUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+            animation-delay: 0.2s;
+        }
+
+        @keyframes slideUp {
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .category-title {
+            font-size: 1.8rem;
+            color: var(--text-main);
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            border-bottom: 2px solid rgba(255,255,255,0.05);
+            padding-bottom: 15px;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .card {
+            background: var(--card-bg);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid var(--card-border);
+            border-radius: 16px;
+            padding: 1.5rem;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            text-decoration: none;
+            color: var(--text-main);
+        }
+
+        .card.active {
+            cursor: pointer;
+            box-shadow: 0 10px 30px rgba(59, 130, 246, 0.15);
+        }
+
+        .card.active:hover {
+            transform: translateY(-8px) scale(1.02);
             border-color: var(--primary-color);
-            box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.15);
+            box-shadow: 0 20px 40px rgba(59, 130, 246, 0.3);
         }
 
-        input[type="number"]::placeholder {
-            color: rgba(255, 255, 255, 0.2);
+        .card.locked {
+            background: var(--locked-bg);
+            cursor: not-allowed;
         }
 
-        button {
-            width: 100%;
-            padding: 16px;
+        .card.locked::before {
+            content: 'Binnenkort';
+            position: absolute;
+            top: 15px;
+            right: -30px;
+            background: rgba(255,255,255,0.1);
+            color: var(--text-muted);
+            font-size: 0.7rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            padding: 4px 30px;
+            transform: rotate(45deg);
+            letter-spacing: 1px;
+            border: 1px dashed rgba(255,255,255,0.2);
+        }
+
+        .card-icon {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            filter: drop-shadow(0 4px 6px rgba(0,0,0,0.3));
+        }
+
+        .card.locked .card-icon {
+            opacity: 0.5;
+            filter: grayscale(100%);
+        }
+
+        .card h3 {
+            font-size: 1.2rem;
+            margin-bottom: 0.5rem;
+            font-weight: 700;
+        }
+
+        .card.locked h3 {
+            color: var(--text-muted);
+        }
+
+        .card p {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            line-height: 1.5;
+            flex-grow: 1;
+        }
+
+        .card.active .play-btn {
+            margin-top: 1.5rem;
             background: linear-gradient(to right, var(--primary-color), var(--accent-color));
             color: white;
             font-family: 'Outfit', sans-serif;
             font-weight: 600;
-            font-size: 1.1rem;
-            border: none;
-            border-radius: 12px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            position: relative;
-            overflow: hidden;
-            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
-        }
-
-        button::after {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(to right, transparent, rgba(255,255,255,0.2), transparent);
-            transform: translateX(-100%);
-            transition: transform 0.6s ease;
-        }
-
-        button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(59, 130, 246, 0.4);
-        }
-
-        button:hover::after {
-            transform: translateX(100%);
-        }
-        
-        button:active {
-            transform: translateY(1px);
-        }
-
-        #error {
-            color: var(--error-color);
-            font-size: 0.9rem;
+            padding: 10px;
+            border-radius: 8px;
             text-align: center;
-            min-height: 20px;
-            font-weight: 500;
-            opacity: 0;
+            opacity: 0.9;
             transition: opacity 0.3s;
         }
-        
-        #error.visible {
+
+        .card.active:hover .play-btn {
             opacity: 1;
         }
 
-        #log {
-            margin-top: 1rem;
-            display: flex;
-            flex-direction: column;
-            gap: 1rem;
-        }
-
-        .step {
-            font-family: 'Space Mono', monospace;
-            background: rgba(0, 0, 0, 0.2);
-            padding: 16px 20px;
-            border-radius: 12px;
-            border-left: 4px solid var(--primary-color);
-            position: relative;
-            overflow: hidden;
-            opacity: 0;
-            transform: translateX(-10px);
-            animation: slideInRight 0.4s forwards;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.15);
-        }
-
-        .step-number {
-            position: absolute;
-            left: -10px;
-            top: -20px;
-            font-size: 5rem;
-            opacity: 0.05;
-            font-weight: 800;
-            color: white;
-            pointer-events: none;
-            line-height: 1;
-        }
-
-        .step-content {
-            display: flex;
-            align-items: center;
-            width: 100%;
-            justify-content: space-between;
-            position: relative;
-            z-index: 1;
-        }
-
-        .step-math {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            color: var(--text-muted);
-            font-size: 1.25rem;
-        }
-
-        .number-block {
-            padding: 4px 10px;
-            background: rgba(255,255,255,0.05);
-            border-radius: 6px;
-            color: var(--text-main);
-            letter-spacing: 2px;
-            animation: popInText 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
-            opacity: 0;
-            transform: scale(0.8);
-        }
-
-        .number-block.first { animation-delay: 0.1s; }
-        .number-block.second { animation-delay: 0.7s; }
-
-        .operator {
-            color: var(--accent-color);
-            font-weight: 700;
-            opacity: 0;
-            animation: fadeInOp 0.3s forwards;
-        }
-
-        .operator.minus { animation-delay: 0.4s; }
-        .operator.equals { animation-delay: 1.0s; }
-
-        .step-result {
-            font-size: 1.4rem;
-            font-weight: 700;
-            color: white;
-            background: rgba(255, 255, 255, 0.1);
-            padding: 8px 16px;
-            border-radius: 8px;
-            box-shadow: 0 0 15px rgba(255, 255, 255, 0.05);
-            opacity: 0;
-            transform: translateX(20px);
-            animation: slideInResult 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
-            animation-delay: 1.3s;
-            letter-spacing: 3px;
-        }
-
-        @keyframes popInText { to { opacity: 1; transform: scale(1); } }
-        @keyframes fadeInOp { to { opacity: 1; } }
-        @keyframes slideInResult { to { opacity: 1; transform: translateX(0); background: rgba(59, 130, 246, 0.3); box-shadow: 0 0 20px rgba(59, 130, 246, 0.4); } }
-        @keyframes slideInRight { to { opacity: 1; transform: translateX(0); } }
-
-        .final-msg {
-            margin-top: 1.5rem;
-            text-align: center;
-            background: rgba(16, 185, 129, 0.1);
-            border: 1px solid rgba(16, 185, 129, 0.2);
-            padding: 16px;
-            border-radius: 12px;
-            color: var(--success-color);
-            font-weight: 600;
-            font-size: 1.1rem;
-            opacity: 0;
-            transform: scale(0.95);
-            animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
-            box-shadow: 0 0 20px rgba(16, 185, 129, 0.1);
-        }
-        
-        .final-msg span.magic-number {
-            font-family: 'Space Mono', monospace;
-            font-size: 1.4rem;
-            font-weight: 700;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 2px;
-            margin-top: 8px;
-            text-shadow: 0 0 10px rgba(16, 185, 129, 0.4);
-        }
-
-        @keyframes popIn {
-            to {
-                opacity: 1;
-                transform: scale(1);
-            }
-        }
-
-        .history-sidebar {
-            position: fixed;
-            right: 30px;
-            top: 30px;
-            width: 350px;
-            background: var(--card-bg);
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
-            border-radius: 20px;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 0 1px var(--card-border);
-            padding: 1.5rem;
-            display: none;
-            flex-direction: column;
-            gap: 1.5rem;
-            z-index: 50;
-            max-height: calc(100vh - 60px);
-            overflow-y: auto;
-            transform: translateX(50px);
-            opacity: 0;
-            animation: slideInSidebar 0.5s forwards;
-        }
-
-        .history-sidebar.active {
-            display: flex;
-        }
-
-        @keyframes slideInSidebar {
-            to { opacity: 1; transform: translateX(0); }
-        }
-
-        @media (max-width: 1200px) {
-            body {
-                flex-direction: column;
-                padding-top: 50px;
-                padding-bottom: 50px;
-                height: auto;
-            }
-            .history-sidebar {
-                position: static;
-                width: 100%;
-                max-width: 500px;
-                margin-top: 2rem;
-                max-height: none;
-                transform: translateX(0);
-            }
-        }
-
-        .history-controls {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            font-size: 1.1rem;
-            font-weight: 600;
-            color: var(--text-main);
-            border-bottom: 1px solid var(--card-border);
-            padding-bottom: 1rem;
-            margin-top: 0;
-        }
-        
-        .history-controls select {
-            background: rgba(0,0,0,0.2);
-            color: var(--text-main);
-            border: 1px solid var(--card-border);
-            padding: 6px 10px;
-            border-radius: 6px;
-            font-family: 'Outfit', sans-serif;
-            outline: none;
-            cursor: pointer;
-            font-size: 0.9rem;
-        }
-
-        .history-controls option {
-            background: var(--bg-gradient-end);
-            color: var(--text-main);
-        }
-
-        .history-badge .steps {
-            background: rgba(0,0,0,0.3);
-            border-radius: 4px;
-            padding: 2px 6px;
-            margin-left: 6px;
-            font-size: 0.75rem;
-            color: var(--accent-color);
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
-            vertical-align: middle;
-        }
-
-        #history {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 0.75rem;
-            margin-top: 0;
-            justify-content: flex-start;
-        }
-
-        .history-badge {
-            background: rgba(255, 255, 255, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            padding: 6px 12px;
-            border-radius: 20px;
-            font-size: 0.95rem;
-            font-family: 'Space Mono', monospace;
-            color: var(--text-muted);
-            transition: all 0.2s;
-            cursor: default;
-        }
-
-        .history-badge.highlight {
-            border-color: var(--warning-color, #f59e0b);
-            color: var(--warning-color, #f59e0b);
-            box-shadow: 0 0 10px rgba(245, 158, 11, 0.3);
-            transform: scale(1.05);
-        }
-        
-        /* Loading indicator for the button */
-        .calculating {
-            pointer-events: none;
-            opacity: 0.8;
-        }
-
-        .title-container {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 12px;
-            margin-bottom: 0.5rem;
-        }
-
-        .title-container h1 {
-            margin-bottom: 0;
-        }
-
-        .info-btn {
-            background: rgba(255, 255, 255, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            color: var(--primary-color);
-            width: 32px;
-            height: 32px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            padding: 0;
-        }
-
-        .info-btn:hover {
-            background: var(--primary-color);
-            color: white;
-            transform: scale(1.1);
-            box-shadow: 0 0 15px rgba(59, 130, 246, 0.5);
-        }
-
-        .info-btn::after, .close-btn::after {
-            display: none !important;
-        }
-
-        /* Modal Styles */
-        .modal-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100vw;
-            height: 100vh;
-            background: rgba(15, 23, 42, 0.8);
-            backdrop-filter: blur(8px);
-            z-index: 100;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            opacity: 0;
-            pointer-events: none;
-            transition: opacity 0.3s ease;
-            padding: 20px;
-        }
-
-        .modal-overlay.active {
-            opacity: 1;
-            pointer-events: all;
-        }
-
-        .modal-content {
-            background: var(--card-bg);
-            border: 1px solid var(--card-border);
-            border-radius: 20px;
-            padding: 2rem;
-            max-width: 500px;
-            width: 100%;
-            color: var(--text-main);
-            transform: scale(0.9) translateY(20px);
-            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
-            max-height: 85vh;
-            overflow-y: auto;
-        }
-
-        .modal-overlay.active .modal-content {
-            transform: scale(1) translateY(0);
-        }
-
-        .modal-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 1.5rem;
-            border-bottom: 1px solid rgba(255,255,255,0.1);
-            padding-bottom: 1rem;
-        }
-
-        .modal-header h2 {
-            font-size: 1.5rem;
-            color: var(--primary-color);
-        }
-
-        .close-btn {
-            background: transparent;
-            border: none;
-            color: var(--text-muted);
-            width: auto;
-            padding: 4px;
-            box-shadow: none;
-            cursor: pointer;
-            transition: color 0.2s;
-        }
-
-        .close-btn:hover {
-            color: white;
-            background: transparent;
-            transform: none;
-            box-shadow: none;
-        }
-
-        .modal-body {
-            line-height: 1.6;
-            font-size: 1.05rem;
-        }
-        
-        .modal-body h3 {
-            color: var(--accent-color);
-            margin: 1.5rem 0 0.5rem 0;
-            font-size: 1.2rem;
-        }
-        
-        .modal-body p {
-            margin-bottom: 1rem;
-        }
-        
-        .modal-body .example {
-            background: rgba(0,0,0,0.3);
-            padding: 15px;
-            border-left: 4px solid var(--accent-color);
-            border-radius: 8px;
-            font-family: 'Space Mono', monospace;
-            margin: 1rem 0;
-            font-size: 0.95rem;
-        }
-
-        .tel-list {
-            list-style: none;
-            padding-left: 0;
-            margin: 1rem 0;
-            background: rgba(0,0,0,0.2);
-            padding: 15px;
-            border-radius: 8px;
-        }
-
-        .tel-list li {
-            margin-bottom: 8px;
-            padding-bottom: 8px;
-            border-bottom: 1px dashed rgba(255,255,255,0.1);
-        }
-
-        .tel-list li:last-child {
-            margin-bottom: 0;
-            padding-bottom: 0;
-            border-bottom: none;
-        }
-
-        .tel-list b {
-            color: var(--primary-color);
-            font-size: 1.2rem;
-            display: inline-block;
-            width: 25px;
-        }
-
-        .jonah-section {
-            background: rgba(139, 92, 246, 0.1);
-            border-left: 4px solid var(--accent-color);
-            padding: 15px;
-            border-radius: 0 8px 8px 0;
-            margin: 1.5rem 0;
-        }
-
-        .jonah-section h3 {
-            margin-top: 0;
-            color: var(--accent-color);
-        }
-
-        .jonah-section p {
-            margin-bottom: 1rem;
-            font-style: italic;
-        }
-
-        .jonah-section p:last-child {
-            margin-bottom: 0;
-        }
-
-        .youtube-btn {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-            background: #ef4444; /* YouTube red */
-            color: white;
-            padding: 12px 20px;
-            border-radius: 8px;
-            text-decoration: none;
-            font-family: 'Outfit', sans-serif;
-            font-weight: 600;
-            transition: all 0.3s;
-            margin-top: 1rem;
-            width: 100%;
-        }
-
-        .youtube-btn:hover {
-            background: #dc2626;
-            transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(239, 68, 68, 0.4);
-            color: white;
+        @media (max-width: 768px) {
+            h1 { font-size: 2.5rem; }
+            .grid { grid-template-columns: 1fr; }
+            .category-container { margin-bottom: 3rem; }
         }
     </style>
 </head>
 <body>
 
-<div class="bg-shape shape-1"></div>
-<div class="bg-shape shape-2"></div>
+    <div class="bg-shape shape-1"></div>
+    <div class="bg-shape shape-2"></div>
 
-<div class="container">
     <div class="header">
-        <div class="title-container">
-            <h1>Kaprekar Machine</h1>
-            <button class="info-btn" onclick="openPopup()" title="Hoe werkt dit?">
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
-            </button>
-        </div>
-        <p class="subtitle">Voer een getal van 4 cijfers in.<br>Zorg voor minimaal twee verschillende cijfers.</p>
+        <h1>De Machine-Bibliotheek</h1>
+        <p class="subtitle">Een verzameling van interactieve, speelbare concepten voor Jonah. Van rekenraadsels tot natuurverschijnselen, in kleine machines gegoten.</p>
     </div>
-    
-    <div class="input-group">
-        <input type="number" id="numberInput" placeholder="Bijv. 1234" maxlength="4" oninput="if(this.value.length > 4) this.value = this.value.slice(0, 4);">
-    </div>
-    
-    <button id="startBtn" onclick="startKaprekar()">Start Transformatie</button>
-    <div id="error"></div>
-    <div id="log"></div>
-</div>
 
-<div class="history-sidebar" id="historySidebar">
-    <div class="history-controls" id="historyControls">
-        <span>Geschiedenis</span>
-        <select id="sortSelect" onchange="renderHistory()">
-            <option value="desc">Meeste stappen</option>
-            <option value="asc">Minste stappen</option>
-        </select>
-    </div>
-    <div id="history"></div>
-</div>
+    <div id="library-container"></div>
 
-<script>
-    // Haal elementen op
-    const inputEl = document.getElementById('numberInput');
-    const btnEl = document.getElementById('startBtn');
-    
-    // Houd eerder geteste nummers bij
-    const historyData = [];
-    const historyEl = document.getElementById('history');
-    const historyControls = document.getElementById('historyControls');
+    <script>
+        const conceptData = [
+            {
+                category: "Wiskunde & Logica",
+                icon: "🔢",
+                machines: [
+                    { title: "Kaprekar Machine", desc: "Het magische zwarte gat van 6174 ontrafeld.", status: "active", link: "kaprekar.html", icon: "✨" },
+                    { title: "De Regel van 72", desc: "Bereken razendsnel hoelang het duurt om waarden te verdubbelen.", status: "active", link: "regelvan72.html", icon: "📈" },
+                    { title: "Wet van Benford", desc: "Onderzoek de vreemde dominantie van het cijfer 1 in data.", status: "active", link: "benford.html", icon: "1️⃣" },
+                    { title: "Binaire Klok", desc: "Leer de tijd aflezen in computertaal: enen en nullen.", status: "active", link: "binaireklok.html", icon: "⏱️" },
+                    { title: "Gulden Snede (φ)", desc: "De goddelijke verhouding in de natuur en architectuur.", status: "active", link: "guldensnede.html", icon: "🐚" },
+                    { title: "Magisch Vierkant", desc: "Zorg dat elke rij, kolom en diagonaal hetzelfde totaal (15) hebben.", status: "active", link: "magischvierkant.html", icon: "🔳" },
+                    { title: "Verjaardagsparadox", desc: "De vreemde kansberekening van dubbele verjaardagen.", status: "locked", icon: "🎂" },
+                    { title: "Ulam-spiraal", desc: "Visualiseer de patronen in mysterieuze priemgetallen.", status: "locked", icon: "🌀" },
+                    { title: "Steen-Papier-Schaar", desc: "Ontdek de Nash-evenwicht strategie van het bekende spel.", status: "locked", icon: "✂️" },
+                    { title: "Pascal's Driehoek", desc: "Vind eindeloze patronen en combinaties in getallen.", status: "locked", icon: "🔺" },
+                    { title: "Lissajous-figuren", desc: "Maak prachtige golvende harmonische trillingsobjecten.", status: "locked", icon: "〰️" }
+                ]
+            },
+            {
+                category: "Aardrijkskunde & Natuur",
+                icon: "🌍",
+                machines: [
+                    { title: "Tijdzone Machine", desc: "Speel met de zon en de datumgrens over de hele wereld.", status: "locked", icon: "🌎" },
+                    { title: "Beaufort Schaal", desc: "Meet de windkracht en zie de effecten op de omgeving.", status: "locked", icon: "🌬️" },
+                    { title: "Horizon-afstand", desc: "Bereken exact hoe ver je kunt kijken vanaf jouw hoogte.", status: "locked", icon: "🔭" },
+                    { title: "Scovilleschaal", desc: "Test de pittigheid van 's werelds heetste chilipepers.", status: "locked", icon: "🌶️" },
+                    { title: "Richter Schaal", desc: "Simuleer de logaritmische kracht van aardbevingen.", status: "locked", icon: "🌋" },
+                    { title: "Continentale Drift", desc: "Spoel de tijd door en zie continenten racen.", status: "locked", icon: "🧩" },
+                    { title: "Bortle-schaal", desc: "Hoeveel sterren zie jij? Meet de lichtvervuiling.", status: "locked", icon: "🌌" },
+                    { title: "Onweer Afstand", desc: "Flits! Bereken hoe ver het onweer bij jou vandaan is.", status: "locked", icon: "⚡" },
+                    { title: "Albedo-effect", desc: "Speel met lichtreflectie op ijs, water en land.", status: "locked", icon: "🧊" },
+                    { title: "Corioliseffect", desc: "De draaiing van de aarde die orkanen laat tollen.", status: "locked", icon: "🌪️" }
+                ]
+            },
+            {
+                category: "Taal & Communicatie",
+                icon: "✍️",
+                machines: [
+                    { title: "Morse Code Knopper", desc: "Communiceer met ritmische licht- en geluidspulsen.", status: "locked", icon: "📻" },
+                    { title: "NAVO Vertaler", desc: "Helder spellen via de radio (Alpha, Bravo, Charlie).", status: "locked", icon: "🚁" },
+                    { title: "Palindroom Logica", desc: "Ontdek woorden en zinnen die omkeerbaar zijn.", status: "locked", icon: "🔁" },
+                    { title: "Anagram Architect", desc: "Herschik letters om verborgen betekenissen te vinden.", status: "locked", icon: "🔠" },
+                    { title: "Lipogram Controle", desc: "Schrijf een heel verhaal zonder één specifieke letter.", status: "locked", icon: "🚫" },
+                    { title: "Letterfrequentie", desc: "Kraak codes door taal-statistieken te analyseren.", status: "locked", icon: "📊" },
+                    { title: "Leesbaarheidsindex", desc: "Bereken hoe moeilijk teksten eigenlijk geschreven zijn.", status: "locked", icon: "📚" },
+                    { title: "Pig Latin Tolk", desc: "De regels van een eeuwenoude geheimtaal vertaald.", status: "locked", icon: "🐷" },
+                    { title: "Haiku Analyzer", desc: "Lettergrepen tellen en klassieke 5-7-5 gedichten maken.", status: "locked", icon: "🌸" },
+                    { title: "Etymologie Roots", desc: "Graaf naar de oeroude wortels van moderne woorden.", status: "locked", icon: "🌳" }
+                ]
+            },
+            {
+                category: "Technologie & Wetenschap",
+                icon: "🚀",
+                machines: [
+                    { title: "ASCII Generator", desc: "Weef prachtige beelden van data en stukjes tekst.", status: "locked", icon: "👾" },
+                    { title: "Ontsnappingssnelheid", desc: "Hoeveel raketkracht kost het om de aarde te verlaten?", status: "locked", icon: "🚀" },
+                    { title: "Turing Test", desc: "Stel de grenzen vast: kan software echt zelf denken?", status: "locked", icon: "🤖" },
+                    { title: "Halfwaardetijd", desc: "Kijk hoe atomen langzaam maar zeker afnemen (verval).", status: "locked", icon: "☢️" },
+                    { title: "RGB Kleurmixer", desc: "Additieve kleurmenging om elk licht te produceren.", status: "locked", icon: "🎨" },
+                    { title: "Wet van Ohm", desc: "Spanning, stroom en weerstand in actie (V = I x R).", status: "locked", icon: "⚡" },
+                    { title: "Zwaartekracht Machine", desc: "Weeg jezelf in te toekomst op Mars of Jupiter.", status: "locked", icon: "🪐" },
+                    { title: "Binary Search", desc: "Speel getallen raden met supersnelle zoek-algoritmes.", status: "locked", icon: "🔍" },
+                    { title: "Absolute Nulpunt", desc: "Van Kelvin naar Celsius in stervende kou.", status: "locked", icon: "❄️" },
+                    { title: "Doppler-effect", desc: "Waarom sirenes anders klinken als ze voorbij racen.", status: "locked", icon: "🚑" }
+                ]
+            }
+        ];
 
-    function renderHistory() {
-        if (historyData.length === 0) return;
-        document.getElementById('historySidebar').classList.add('active');
-        
-        const sortMode = document.getElementById('sortSelect').value;
-        const sortedData = [...historyData].sort((a, b) => {
-            if (sortMode === 'desc') return b.steps - a.steps;
-            return a.steps - b.steps;
-        });
+        const container = document.getElementById('library-container');
 
-        historyEl.innerHTML = '';
-        sortedData.forEach(item => {
-            const badge = document.createElement('span');
-            badge.className = 'history-badge';
-            badge.dataset.number = item.number;
-            badge.innerHTML = `${item.number} <span class="steps">${item.steps} <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 16v-2.38C4 11.5 2.97 10.5 3 8c.03-2.72 1.49-6 4.5-6C9.37 2 10 3.8 10 5.5c0 3.11-2 5.66-2 8.68V16a2 2 0 1 1-4 0Z"/><path d="M20 20v-2.38c0-2.12 1.03-3.12 1-5.62-.03-2.72-1.49-6-4.5-6C14.63 6 14 7.8 14 9.5c0 3.11 2 5.66 2 8.68V20a2 2 0 1 0 4 0Z"/><path d="M16 17h4"/><path d="M4 13h4"/></svg></span>`;
-            historyEl.appendChild(badge);
-        });
-    }
-    
-    // Voeg Enter-toets ondersteuning toe
-    inputEl.addEventListener('keypress', function(e) {
-        if (e.key === 'Enter') {
-            startKaprekar();
-        }
-    });
+        conceptData.forEach((section, index) => {
+            const sectionDiv = document.createElement('div');
+            sectionDiv.className = 'category-container';
+            sectionDiv.style.animationDelay = `${0.2 + (index * 0.1)}s`;
 
-    async function sleep(ms) {
-        return new Promise(resolve => setTimeout(resolve, ms));
-    }
-
-    async function startKaprekar() {
-        // Valideer lengte (max 4, toevoegen voorloopnullen in de logica)
-        let inputVal = inputEl.value.trim();
-        
-        const log = document.getElementById('log');
-        const error = document.getElementById('error');
-        
-        log.innerHTML = '';
-        error.classList.remove('visible');
-        
-        if (inputVal === '') {
-            showError("Voer aub een getal in.");
-            return;
-        }
-
-        // Pad met nullen als de invoer korter is dan 4 (zoals "1" -> "0001")
-        inputVal = inputVal.padStart(4, '0');
-
-        // Check voor unieke cijfers. 
-        if (inputVal.length > 4 || new Set(inputVal).size < 2) {
-            showError("Ongeldige invoer: Gebruik 4 cijfers met minimaal 2 unieke waarden.");
-            return;
-        }
-
-        if (historyData.find(item => item.number === inputVal)) {
-            showError("Dit getal heb je al eerder geprobeerd!");
-            
-            // Highlight de badge
-            const badges = document.querySelectorAll('.history-badge');
-            badges.forEach(b => {
-                if (b.dataset.number === inputVal) {
-                    b.classList.add('highlight');
-                    setTimeout(() => b.classList.remove('highlight'), 1000);
-                }
-            });
-            return;
-        }
-
-        // Wordt toegevoegd aan geschiedenis na berekening
-
-        let current = inputVal;
-        let iterations = 0;
-        
-        // UI Feedback we zijn aan het rekenen
-        btnEl.classList.add('calculating');
-        btnEl.textContent = 'Bezig met berekenen...';
-        inputEl.disabled = true;
-
-        while (current !== "6174" && iterations < 15) {
-            let digits = current.split('');
-            let desc = [...digits].sort((a, b) => b - a).join('');
-            let asc = [...digits].sort((a, b) => a - b).join('');
-            let diff = parseInt(desc, 10) - parseInt(asc, 10);
-            
-            let next = diff.toString().padStart(4, '0');
-            
-            // Visualiseer de stap met micro-animaties
-            await sleep(50);
-            
-            const stepDiv = document.createElement('div');
-            stepDiv.className = 'step';
-            stepDiv.style.animationDelay = '0s'; // reset delay because we await
-            
-            stepDiv.innerHTML = `
-                <div class="step-number">${iterations + 1}</div>
-                <div class="step-content">
-                    <div class="step-math">
-                        <span class="number-block first">${desc}</span>
-                        <span class="operator minus">-</span>
-                        <span class="number-block second">${asc}</span>
-                        <span class="operator equals">=</span>
-                    </div>
-                    <div class="step-result">${next}</div>
+            sectionDiv.innerHTML = `
+                <h2 class="category-title">${section.icon} ${section.category}</h2>
+                <div class="grid">
+                    ${section.machines.map(m => `
+                        ${m.status === 'active' ? `<a href="${m.link}" class="card active">` : `<div class="card locked">`}
+                            <div class="card-icon">${m.icon}</div>
+                            <h3>${m.title}</h3>
+                            <p>${m.desc}</p>
+                            ${m.status === 'active' ? `<div class="play-btn">Start Machine</div>` : ''}
+                        ${m.status === 'active' ? `</a>` : `</div>`}
+                    `).join('')}
                 </div>
             `;
-            log.appendChild(stepDiv);
-            
-            // Scroll to bottom indien nodig
-            log.scrollTop = log.scrollHeight;
-            
-            // Wacht tot de micro-animaties van deze stap voltooid zijn
-            await sleep(1800);
-            
-            current = next;
-            iterations++;
-            
-            if (current === "6174" || diff === 0) break;
-        }
-
-        await sleep(400);
-
-        if (current === "6174") {
-            const finalMsg = document.createElement('div');
-            finalMsg.className = 'final-msg';
-            finalMsg.innerHTML = `Constante bereikt!<span class="magic-number">${inputVal} &rarr; 6174 = ${iterations}<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 16v-2.38C4 11.5 2.97 10.5 3 8c.03-2.72 1.49-6 4.5-6C9.37 2 10 3.8 10 5.5c0 3.11-2 5.66-2 8.68V16a2 2 0 1 1-4 0Z"/><path d="M20 20v-2.38c0-2.12 1.03-3.12 1-5.62-.03-2.72-1.49-6-4.5-6C14.63 6 14 7.8 14 9.5c0 3.11 2 5.66 2 8.68V20a2 2 0 1 0 4 0Z"/><path d="M16 17h4"/><path d="M4 13h4"/></svg></span>`;
-            log.appendChild(finalMsg);
-        } else if (current === "0000") {
-             const finalMsg = document.createElement('div');
-             finalMsg.className = 'final-msg';
-             finalMsg.style.background = 'rgba(239, 68, 68, 0.1)';
-             finalMsg.style.color = 'var(--error-color)';
-             finalMsg.style.borderColor = 'rgba(239, 68, 68, 0.2)';
-             finalMsg.innerHTML = `Uitgekomen op 0000! Alle cijfers waren waarschijnlijk hetzelfde.`;
-             log.appendChild(finalMsg);
-        } else {
-             const finalMsg = document.createElement('div');
-             finalMsg.className = 'final-msg';
-             finalMsg.style.color = 'var(--accent-color)';
-             finalMsg.innerHTML = `Gestopt na ${iterations} iteraties.`;
-             log.appendChild(finalMsg);
-        }
-        
-        // Voeg toe aan geschiedenis
-        historyData.push({ number: inputVal, steps: iterations });
-        renderHistory();
-
-        // Herstel UI
-        btnEl.classList.remove('calculating');
-        btnEl.textContent = 'Start Transformatie';
-        inputEl.disabled = false;
-        inputEl.focus();
-    }
-    
-    function showError(msg) {
-        const error = document.getElementById('error');
-        error.textContent = msg;
-        error.classList.add('visible');
-    }
-
-    function openPopup() {
-        document.getElementById('helpModal').classList.add('active');
-    }
-
-    function closePopup() {
-        document.getElementById('helpModal').classList.remove('active');
-    }
-</script>
-
-<div class="modal-overlay" id="helpModal" onclick="if(event.target === this) closePopup()">
-    <div class="modal-content">
-        <div class="modal-header">
-            <h2>Het Magische Zwarte Gat ✨</h2>
-            <button class="close-btn" onclick="closePopup()">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-            </button>
-        </div>
-        <div class="modal-body">
-            <p>Dit getal, <b>6174</b>, staat bekend als de <strong>constante van Kaprekar</strong>. Het is een soort wiskundige goocheltruc die altijd werkt met getallen van vier cijfers.</p>
-            
-            <h3>De uitleg van de truc</h3>
-            <p>1. Kies een getal van vier cijfers waarbij de cijfers niet allemaal hetzelfde zijn (dus niet 1111 of 2222).</p>
-            <p>2. Maak met deze vier cijfers het <b>grootst mogelijke getal</b> (zet ze van groot naar klein).</p>
-            <p>3. Maak met dezelfde cijfers het <b>kleinst mogelijke getal</b> (zet ze van klein naar groot).</p>
-            <p>4. Trek het kleine getal af van het grote getal.</p>
-            <p>5. Herhaal dit met de uitkomst.</p>
-            
-            <p>Uiteindelijk kom je altijd uit bij 6174. Als je de truc daarna nog een keer doet met 6174 (7641 - 1467 = 6174), is de uitkomst opnieuw 6174. Het getal zit dus "gevangen" in zijn eigen som.</p>
-
-            <h3>Manier om dit te onthouden</h3>
-            <p>Onthoud de naam <b>"De T.E.L.-Machine"</b>:</p>
-            <ul class="tel-list">
-                <li><b>T</b> – <b>T</b>alen (cijfers) kiezen.</li>
-                <li><b>E</b> – <b>E</b>erst groot, dan klein.</li>
-                <li><b>L</b> – <b>L</b>aat ze van elkaar afgaan (min-som).</li>
-            </ul>
-
-            <div class="jonah-section">
-                <h3>Speciaal voor Jonah (8 jaar) 👦</h3>
-                <p>"Stel je voor dat het getal 6174 een magisch zwart gat is waar alle andere getallen van vier cijfers naartoe worden gezogen.</p>
-                <p>Je kiest vier cijfers, bijvoorbeeld je geboortejaar of zomaar wat nummers. Je maakt er een reusachtig getal van en een heel klein getal. Trek die van elkaar af. Met het nieuwe getal doe je precies hetzelfde. Wat er ook gebeurt, na een paar stapjes kom je áltijd uit bij de 'Magische 6174'. Het is een getal dat nooit meer verandert, hoe vaak je de som ook herhaalt!"</p>
-            </div>
-
-            <a href="http://www.youtube.com/watch?v=TSvsXdsf4b4" target="_blank" class="youtube-btn">
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M19.615 3.184c-3.604-.246-11.631-.245-15.23 0-3.897.266-4.356 2.62-4.385 8.816.029 6.185.484 8.549 4.385 8.816 3.6.245 11.626.246 15.23 0 3.897-.266 4.356-2.62 4.385-8.816-.029-6.185-.484-8.549-4.385-8.816zm-10.615 12.816v-8l8 3.993-8 4.007z"/></svg>
-                Bekijk de uitleg op YouTube
-            </a>
-        </div>
-    </div>
-</div>
-
+            container.appendChild(sectionDiv);
+        });
+    </script>
 </body>
 </html>
