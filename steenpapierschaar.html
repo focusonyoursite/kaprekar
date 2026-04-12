@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Steen-Papier-Schaar Machine</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-gradient-start: #0f172a;
+            --bg-gradient-end: #1e293b;
+            --card-bg: rgba(30, 41, 59, 0.7);
+            --card-border: rgba(255, 255, 255, 0.1);
+            --primary-color: #f59e0b; /* Amber/Gold */
+            --primary-hover: #d97706;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --accent-color: #3b82f6; /* Blue for AI */
+            --success-color: #10b981;
+            --error-color: #ef4444;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: linear-gradient(135deg, var(--bg-gradient-start) 0%, var(--bg-gradient-end) 100%);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        .bg-shape { position: absolute; filter: blur(80px); z-index: 0; border-radius: 50%; opacity: 0.3; animation: float 10s infinite ease-in-out alternate; }
+        .shape-1 { width: 450px; height: 450px; background: var(--accent-color); top: -100px; left: -100px; }
+        .shape-2 { width: 350px; height: 350px; background: var(--primary-color); bottom: -100px; right: -100px; animation-delay: -5s; }
+        @keyframes float { 0% { transform: translateY(0) scale(1); } 100% { transform: translateY(30px) scale(1.1); } }
+
+        .back-btn {
+            position: absolute; top: 30px; left: 30px; display: flex; align-items: center; gap: 8px;
+            color: var(--text-muted); text-decoration: none; font-weight: 600; transition: all 0.3s ease;
+            z-index: 10; padding: 8px 16px; border-radius: 12px; background: rgba(255,255,255,0.05); border: 1px solid var(--card-border);
+        }
+        .back-btn:hover { color: var(--primary-color); background: rgba(245, 158, 11, 0.1); border-color: var(--primary-color); transform: translateX(-5px); }
+
+        .container {
+            background: var(--card-bg); backdrop-filter: blur(16px); padding: 2.5rem; border-radius: 24px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 0 1px var(--card-border);
+            max-width: 800px; width: 100%; z-index: 1; position: relative;
+            display: flex; flex-direction: column; gap: 2rem;
+        }
+
+        .header { text-align: center; }
+        h1 { font-size: 2.5rem; font-weight: 800; background: linear-gradient(to right, #fff, var(--primary-color)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .subtitle { color: var(--text-muted); font-size: 1rem; }
+
+        .app-layout { display: flex; flex-direction: column; gap: 2rem; }
+
+        .scoreboard {
+            display: flex; justify-content: space-around; background: rgba(0,0,0,0.2);
+            padding: 20px; border-radius: 20px; border: 1px solid var(--card-border);
+        }
+        .score-item { text-align: center; }
+        .score-label { font-size: 0.8rem; text-transform: uppercase; color: var(--text-muted); letter-spacing: 1px; margin-bottom: 5px; }
+        .score-val { font-family: 'Space Mono'; font-size: 2.5rem; font-weight: 800; }
+        .score-val.jonah { color: var(--primary-color); }
+        .score-val.ai { color: var(--accent-color); }
+
+        .game-area {
+            display: flex; flex-direction: column; align-items: center; gap: 2rem;
+            min-height: 250px; justify-content: center; position: relative;
+        }
+
+        .matchup {
+            display: flex; align-items: center; justify-content: center; gap: 4rem; opacity: 0; transition: opacity 0.3s ease;
+        }
+        .matchup.active { opacity: 1; }
+        
+        .choice-display { font-size: 4rem; text-align: center; display: flex; flex-direction: column; align-items: center; }
+        .choice-label { font-size: 0.9rem; font-weight: 700; color: var(--text-muted); margin-top: 10px; }
+
+        .status-msg {
+            font-size: 1.5rem; font-weight: 800; text-align: center; height: 40px;
+            animation: bounceIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        @keyframes bounceIn { from { transform: scale(0.5); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+
+        .controls { display: flex; gap: 1.5rem; justify-content: center; }
+        .game-btn {
+            width: 100px; height: 100px; border-radius: 20px; background: rgba(255,255,255,0.05);
+            border: 2px solid var(--card-border); display: flex; flex-direction: column;
+            align-items: center; justify-content: center; cursor: pointer; transition: all 0.3s ease;
+            font-size: 2.5rem;
+        }
+        .game-btn:hover {
+            transform: translateY(-10px); background: rgba(245, 158, 11, 0.1); border-color: var(--primary-color);
+            box-shadow: 0 10px 30px rgba(245, 158, 11, 0.2);
+        }
+        .game-btn:active { transform: translateY(0); }
+        .game-btn span { font-size: 0.75rem; font-weight: 700; color: var(--text-muted); margin-top: 5px; font-family: 'Outfit'; }
+
+        .brain-box {
+            background: rgba(139, 92, 246, 0.1); border: 1px solid rgba(139, 92, 246, 0.2);
+            padding: 15px 25px; border-radius: 12px; font-family: 'Space Mono'; font-size: 0.85rem;
+            color: var(--accent-color); text-align: center; max-width: 400px; margin: 0 auto;
+            opacity: 0.8;
+        }
+
+        .info-panel {
+            background: rgba(0,0,0,0.2); padding: 1rem; border-radius: 12px; border-left: 4px solid var(--primary-color);
+            line-height: 1.5; font-size: 0.9rem; color: var(--text-muted);
+        }
+        .info-panel b { color: var(--primary-color); }
+
+        /* Modal */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(15, 23, 42, 0.85);
+            backdrop-filter: blur(10px); z-index: 100; display: flex; justify-content: center; align-items: center;
+            opacity: 0; pointer-events: none; transition: 0.3s;
+        }
+        .modal-overlay.active { opacity: 1; pointer-events: all; }
+        .modal-content {
+            background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 24px; padding: 2rem;
+            max-width: 500px; width: 100%; color: var(--text-main); transform: scale(0.9); transition: 0.3s;
+        }
+        .modal-overlay.active .modal-content { transform: scale(1); }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
+        .close-btn { background: transparent; border: none; color: white; cursor: pointer; font-size: 1.5rem; }
+
+        .info-icon-btn {
+            background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.2); color: var(--primary-color);
+            width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+            cursor: pointer; transition: 0.3s;
+        }
+        .info-icon-btn:hover { background: var(--primary-color); color: white; transform: scale(1.1); }
+    </style>
+</head>
+<body>
+
+    <a href="index.html" class="back-btn">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+        Bibliotheek
+    </a>
+
+    <div class="bg-shape shape-1"></div>
+    <div class="bg-shape shape-2"></div>
+
+    <div class="container">
+        <div class="header">
+            <div style="display:flex; align-items:center; justify-content:center; gap:15px;">
+                <h1>Steen-Papier-Schaar</h1>
+                <div class="info-icon-btn" onclick="toggleModal()">?</div>
+            </div>
+            <p class="subtitle">Kun jij de machine verslaan, of voorspelt hij jouw gedrag?</p>
+        </div>
+
+        <div class="app-layout">
+            <div class="scoreboard">
+                <div class="score-item">
+                    <div class="score-label">Jonah</div>
+                    <div class="score-val jonah" id="jonahScore">0</div>
+                </div>
+                <div class="score-item">
+                    <div class="score-label">Gelijk</div>
+                    <div class="score-val" id="drawScore" style="color: var(--text-muted);">0</div>
+                </div>
+                <div class="score-item">
+                    <div class="score-label">Machine</div>
+                    <div class="score-val ai" id="aiScore">0</div>
+                </div>
+            </div>
+
+            <div class="brain-box" id="brainBox">
+                Ik ben aan het leren van jouw keuzes... 🧠
+            </div>
+
+            <div class="game-area">
+                <div id="status" class="status-msg">Maak een keuze!</div>
+                <div class="matchup" id="matchup">
+                    <div class="choice-display">
+                        <div id="jonahChoice">👊</div>
+                        <div class="choice-label">JOUW ZET</div>
+                    </div>
+                    <div style="font-size: 2rem; font-weight: 800; color: var(--text-muted); opacity: 0.3;">VS</div>
+                    <div class="choice-display">
+                        <div id="aiChoice">👊</div>
+                        <div class="choice-label">MACHINE</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="controls">
+                <div class="game-btn" onclick="play('steen')">🪨<span>STEEN</span></div>
+                <div class="game-btn" onclick="play('papier')">📄<span>PAPIER</span></div>
+                <div class="game-btn" onclick="play('schaar')">✂️<span>SCHAAR</span></div>
+            </div>
+
+            <div class="info-panel">
+                <b>Wiskunde-Tip:</b> De beste manier om noóít te verliezen, is om 100% willekeurig te spelen. Maar mensen vinden willekeur heel moeilijk! Wij mensen maken vaak onbewust <b>patronen</b>, en daar maakt deze machine gebruik van!
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Het Geheim van Winnen</h2>
+                <button class="close-btn" onclick="toggleModal()">&times;</button>
+            </div>
+            <div style="line-height:1.6; color: var(--text-muted); font-size: 0.95rem;">
+                <p>Waarom verlies je soms van een computer bij Steen-Papier-Schaar? De computer kan niet in de toekomst kijken, maar hij is wel heel goed in <b>geschiedenis</b>!</p>
+                <br>
+                <p>De machine houdt precies bij wat je de vorige keren deed. Als je bijvoorbeeld vaak Papier kiest na een verlies, dan onthoudt hij dat. Dat noemen we <b>Speltheorie</b>.</p>
+                <br>
+                <p>De beroemde wiskundige <b>John Nash</b> bewees dat de enige onverslaanbare strategie is om precies 1/3 van de tijd voor steen, 1/3 voor papier en 1/3 voor schaar te kiezen, in een willekeurige volgorde!</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let scores = { jonah: 0, ai: 0, draw: 0 };
+        let history = []; // Jonah's move history
+        const moves = {
+            'steen': { icon: '🪨', beats: 'schaar' },
+            'papier': { icon: '📄', beats: 'steen' },
+            'schaar': { icon: '✂️', beats: 'papier' }
+        };
+        const moveKeys = Object.keys(moves);
+
+        function toggleModal() {
+            document.getElementById('modalOverlay').classList.toggle('active');
+        }
+
+        function getAIMove() {
+            if (history.length < 3) {
+                // Not enough data, pick random
+                return moveKeys[Math.floor(Math.random() * 3)];
+            }
+
+            // Simple Pattern Recognition (N-gram)
+            // Look for the last 2 moves and see what Jonah usually picks next
+            let patterns = {};
+            const lastTwo = history.slice(-2).join(',');
+
+            for (let i = 0; i < history.length - 2; i++) {
+                let p = history[i] + ',' + history[i+1];
+                if (p === lastTwo) {
+                    let next = history[i+2];
+                    patterns[next] = (patterns[next] || 0) + 1;
+                }
+            }
+
+            let predictedJonahMove = null;
+            let maxCount = -1;
+            for (let m in patterns) {
+                if (patterns[m] > maxCount) {
+                    maxCount = patterns[m];
+                    predictedJonahMove = m;
+                }
+            }
+
+            if (!predictedJonahMove) {
+                // Secondary strategy: pick the counter to his most frequent overall move
+                let freq = { steen: 0, papier: 0, schaar: 0 };
+                history.forEach(m => freq[m]++);
+                predictedJonahMove = Object.keys(freq).reduce((a, b) => freq[a] > freq[b] ? a : b);
+            }
+
+            // The brain box logic feedback
+            const brainBox = document.getElementById('brainBox');
+            const thinkingPhases = [
+                `Ik zag dat je hiervoor vaak ${predictedJonahMove} koos...`,
+                `Patroon herkend in jouw laatste zetten... 🔍`,
+                `Kansberekening zegt dat je nu voor ${predictedJonahMove} gaat.`,
+                `Mijn algoritme voorspelt jouw volgende zet! 🧠`
+            ];
+            brainBox.innerText = thinkingPhases[Math.floor(Math.random() * thinkingPhases.length)];
+
+            // Return the counter to predicted move
+            if (predictedJonahMove === 'steen') return 'papier';
+            if (predictedJonahMove === 'papier') return 'schaar';
+            return 'steen';
+        }
+
+        function play(jonahMove) {
+            const aiMove = getAIMove();
+            history.push(jonahMove);
+            
+            // Show matchup
+            const matchup = document.getElementById('matchup');
+            const status = document.getElementById('status');
+            const jIcon = document.getElementById('jonahChoice');
+            const aIcon = document.getElementById('aiChoice');
+
+            jIcon.innerText = moves[jonahMove].icon;
+            aIcon.innerText = moves[aiMove].icon;
+            matchup.classList.add('active');
+
+            // Determine winner
+            if (jonahMove === aiMove) {
+                status.innerText = "GELIJKSPEL! 🤝";
+                status.style.color = "var(--text-muted)";
+                scores.draw++;
+            } else if (moves[jonahMove].beats === aiMove) {
+                status.innerText = "JONAH WINT! 🎉";
+                status.style.color = "var(--success-color)";
+                scores.jonah++;
+            } else {
+                status.innerText = "MACHINE WINT! 🤖";
+                status.style.color = "var(--accent-color)";
+                scores.ai++;
+            }
+
+            // Update scores
+            document.getElementById('jonahScore').innerText = scores.jonah;
+            document.getElementById('aiScore').innerText = scores.ai;
+            document.getElementById('drawScore').innerText = scores.draw;
+
+            // Trigger animation
+            status.style.animation = 'none';
+            status.offsetHeight; /* trigger reflow */
+            status.style.animation = null;
+        }
+    </script>
+</body>
+</html>
