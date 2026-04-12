@@ -132,12 +132,50 @@
 
         /* Screen Shake */
         .shake { animation: screenShake 0.4s cubic-bezier(.36,.07,.19,.97) both; }
+        .violent-shake { animation: violentShake 0.8s cubic-bezier(.36,.07,.19,.97) both infinite; }
+
         @keyframes screenShake {
             10%, 90% { transform: translate3d(-1px, 0, 0); }
             20%, 80% { transform: translate3d(2px, 0, 0); }
             30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
             40%, 60% { transform: translate3d(4px, 0, 0); }
         }
+
+        @keyframes violentShake {
+            0% { transform: translate(0,0); }
+            10% { transform: translate(-10px, -10px); }
+            20% { transform: translate(10px, 5px); }
+            30% { transform: translate(-5px, 10px); }
+            40% { transform: translate(5px, -5px); }
+            50% { transform: translate(-10px, 5px); }
+            60% { transform: translate(10px, -10px); }
+            70% { transform: translate(-5px, -5px); }
+            80% { transform: translate(5px, 10px); }
+            90% { transform: translate(-10px, -5px); }
+            100% { transform: translate(0,0); }
+        }
+
+        .flash-overlay {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            background: #fff; z-index: 999; pointer-events: none; opacity: 0;
+        }
+        .flash-active { animation: flashEffect 0.5s ease-out forwards; }
+        @keyframes flashEffect { 0% { opacity: 1; } 100% { opacity: 0; } }
+
+        .red-alert {
+            box-shadow: inset 0 0 100px #ff0000;
+            animation: redAlertPulse 0.5s infinite alternate;
+        }
+        @keyframes redAlertPulse { from { opacity: 1; } to { opacity: 0.5; } }
+
+        .critical-msg {
+            position: absolute; top: 10%; font-weight: 900; font-size: 2rem;
+            color: #ff0000; text-transform: uppercase; letter-spacing: 5px;
+            z-index: 20; opacity: 0; pointer-events: none;
+            text-shadow: 2px 2px 0 #000, -2px -2px 0 #000;
+        }
+        .critical-msg.active { animation: criticalFlicker 0.2s infinite; opacity: 1; }
+        @keyframes criticalFlicker { 0% { opacity: 1; transform: scale(1.1); } 50% { opacity: 0.3; transform: scale(1); } 100% { opacity: 1; } }
 
         .steam {
             position: absolute; top: 20%; color: rgba(255,255,255,0.2); font-weight: 900; font-size: 4rem;
@@ -155,6 +193,8 @@
         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
         Bibliotheek
     </a>
+
+    <div class="flash-overlay" id="flash"></div>
 
     <div class="container" id="mainContainer">
         <!-- Left Panel: The Selection -->
@@ -184,8 +224,8 @@
                     <div class="p-info"><div class="p-name">Ghost Pepper</div><div class="shu-tag">1.041.427 SHU</div></div>
                 </div>
                 <div class="pepper-item" onclick="ignite(5, this)">
-                    <div class="p-icon">💀</div>
-                    <div class="p-info"><div class="p-name">Carolina Reaper</div><div class="shu-tag">2.200.000 SHU</div></div>
+                    <div class="p-icon">🔥</div>
+                    <div class="p-info"><div class="p-name">Carolina Reaper</div><div class="shu-tag">2.200.000 SHU+</div></div>
                 </div>
             </div>
             
@@ -197,6 +237,8 @@
         <!-- Right Panel: The Core -->
         <div class="display-panel">
             <div class="heat-core" id="heatCore">
+                <div class="flash-overlay" style="position:absolute; background: radial-gradient(circle, #fff 0%, transparent 70%); z-index: 100;" id="innerFlash"></div>
+                <div class="critical-msg" id="critMsg">DANGER: CORE CRITICAL</div>
                 <div class="fire-wrapper" id="fireFill"></div>
                 
                 <div class="status-content">
@@ -247,17 +289,37 @@
             const core = document.getElementById('heatCore');
             const fire = document.getElementById('fireFill');
             const body = document.getElementById('body');
+            const flash = document.getElementById('flash');
+            const critMsg = document.getElementById('critMsg');
 
-            // Reset shake
-            core.classList.remove('shake');
+            // Reset effects
+            core.classList.remove('shake', 'violent-shake');
+            flash.classList.remove('flash-active');
+            critMsg.classList.remove('active');
+            body.classList.remove('red-alert');
+
             void core.offsetWidth; // trigger reflow
-            if (idx >= 4) core.classList.add('shake');
+
+            if (idx === 5) {
+                // REAPER EXPLOSION
+                flash.classList.add('flash-active');
+                core.classList.add('violent-shake');
+                critMsg.classList.add('active');
+                body.classList.add('red-alert');
+                
+                // Massive particles
+                for(let i=0; i<80; i++) {
+                    setTimeout(createSpark, i * 10);
+                }
+            } else if (idx >= 3) {
+                core.classList.add('shake');
+            }
 
             // Fire Height & Color
             fire.style.height = Math.min(100, p.heat) + '%';
             if (idx === 5) {
-                fire.style.background = 'linear-gradient(to top, #7f1d1d 0%, #ff0000 70%, #fff 100%)';
-                body.style.background = '#1a0000';
+                fire.style.background = 'linear-gradient(to top, #ff0000 0%, #ff8800 100%)';
+                body.style.background = '#300000';
             } else {
                 fire.style.background = `linear-gradient(to top, ${p.color} 0%, #ff9900 70%, transparent 100%)`;
                 body.style.background = '#0a0101';
