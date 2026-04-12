@@ -107,7 +107,7 @@
         .bar-container { position: relative; width: 30px; height: 100%; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; z-index: 2; opacity: 0; transform: translateY(10px); transition: all 0.4s ease; }
         .bar-container.show { opacity: 1; transform: translateY(0); }
         .dot-wrapper { position: absolute; width: 100%; height: 100%; bottom: 0; overflow: hidden; border-radius: 4px; pointer-events: none; }
-        .bar-dot { width: 12px; height: 12px; background: var(--accent-color); border-radius: 50%; box-shadow: 0 0 10px var(--accent-color); position: absolute; left: 50%; transform: translateX(-50%); transition: bottom 0.8s cubic-bezier(0.25, 0.8, 0.25, 1); }
+        .bar-dot { width: 12px; height: 12px; background: var(--accent-color); border-radius: 50%; box-shadow: 0 0 10px var(--accent-color); position: absolute; left: 50%; transform: translate(-50%, 50%); }
         .bar-value { font-family: 'Space Mono'; font-size: 0.65rem; color: var(--text-muted); position: absolute; bottom: -24px; }
         .bar-ratio { font-family: 'Space Mono'; font-size: 0.75rem; color: white; position: absolute; top: -30px; background: rgba(0,0,0,0.5); padding: 4px; border-radius: 4px; display: none; white-space: nowrap; }
         .bar-container:hover .bar-ratio { display: block; z-index: 10; }
@@ -220,6 +220,41 @@
         const PHI = 1.6180339887;
         let isGrowing = false;
 
+        // Smooth camera loop animatie variabelen
+        let currentRange = 1.0;
+        let targetRange = 1.0;
+        let animationFrameId = null;
+
+        function animateZoom() {
+            if(!isGrowing) return; 
+            
+            // Lerp de zoom (ca 5% per frame) voor organische easing
+            currentRange += (targetRange - currentRange) * 0.05;
+            
+            let chartHigh = PHI + (currentRange / 2);
+            let chartLow = PHI - (currentRange / 2);
+            
+            // De phi lijn is altijd in het midden
+            const phiLine = document.getElementById('phiLine');
+            if(phiLine) phiLine.style.top = `50%`;
+
+            // Update alle bestaande stipjes vloeiend (60 instantaan!) zonder css stutter
+            const graph = document.getElementById('graph');
+            if (graph) {
+                const allBars = graph.querySelectorAll('.bar-container');
+                allBars.forEach((container) => {
+                    let dRatio = parseFloat(container.dataset.ratio);
+                    if(!isNaN(dRatio)) {
+                        let dPercent = ((dRatio - chartLow) / (chartHigh - chartLow)) * 100;
+                        let dot = container.querySelector('.bar-dot');
+                        if (dot) dot.style.bottom = `${dPercent}%`;
+                    }
+                });
+            }
+
+            animationFrameId = requestAnimationFrame(animateZoom);
+        }
+
         async function startGrowing() {
             if(isGrowing) return;
             isGrowing = true;
@@ -234,7 +269,6 @@
             const graph = document.getElementById('graph');
             const logBox = document.getElementById('logBox');
             
-            // Clear previous visually
             const oldBars = graph.querySelectorAll('.bar-container');
             oldBars.forEach(b => b.remove());
             logBox.innerHTML = '';
@@ -242,8 +276,6 @@
             let sequence = [s1, s2];
             let ratios = [];
 
-            // We generate array
-            // Math rules: calculate 12 items
             for(let i = 2; i < 15; i++) {
                 sequence.push(sequence[i-1] + sequence[i-2]);
             }
@@ -252,38 +284,40 @@
                 ratios.push(sequence[i] / sequence[i-1]);
             }
 
-            // Prepareer de canvas-zoom startwaarden
-            let currentRange = Math.abs(ratios[0] - PHI) * 3.5; 
-            if(currentRange < 0.1) currentRange = 1.0; // fallback
+            // Stop eventuele oude loop
+            if(animationFrameId) cancelAnimationFrame(animationFrameId);
 
-            document.getElementById('phiLine').style.top = `50%`;
+            targetRange = Math.abs(ratios[0] - PHI) * 3.5; 
+            if(targetRange < 0.1) targetRange = 1.0; 
+            currentRange = targetRange; // Start in uitgezoomde staat
+            
+            // Start de 60fps organische camera
+            animateZoom();
 
-            // Animate steps met de dynamische "Camera Zoom"
             for(let i = 0; i < ratios.length; i++) {
                 let ratio = ratios[i];
                 let prev = sequence[i];
                 let curr = sequence[i+1];
 
-                // Check hoeveel zoom er mogelijk is: we willen minimaal de nieuwste afwijking zien.
                 let neededRange = Math.abs(ratio - PHI) * 3.5; 
-                if (neededRange < 0.00001) neededRange = 0.00001; // Extreme inzoom limiet
+                if (neededRange < 0.00001) neededRange = 0.00001; 
                 
-                // Camera zoomt alleen sneller in, zoomt nooit lelijk uit.
-                if (neededRange < currentRange) {
-                    currentRange = neededRange;
+                // Camera target aanpassen, de animateZoom pakt dit organisch op
+                if (neededRange < targetRange) {
+                    targetRange = neededRange;
                 }
-
-                let chartHigh = PHI + (currentRange / 2);
-                let chartLow = PHI - (currentRange / 2);
 
                 let container = document.createElement('div');
                 container.className = 'bar-container';
+                container.dataset.ratio = ratio; // sla op voor javascript loop
 
                 let wrapper = document.createElement('div');
                 wrapper.className = 'dot-wrapper';
 
                 let dot = document.createElement('div');
                 dot.className = 'bar-dot';
+                // start onzichtbaar op 50% tot de css apply komt in show
+                dot.style.bottom = `50%`;
                 wrapper.appendChild(dot);
 
                 let ratioTooltip = document.createElement('div');
@@ -299,15 +333,6 @@
                 container.appendChild(indexVal);
                 graph.appendChild(container);
 
-                // Nu updaten we ALLE dots die al bestaan naar de nieuwe "ingezoomde" view!
-                const allBars = graph.querySelectorAll('.bar-container');
-                allBars.forEach((bContainer, index) => {
-                    let dRatio = ratios[index];
-                    let dPercent = ((dRatio - chartLow) / (chartHigh - chartLow)) * 100;
-                    bContainer.querySelector('.bar-dot').style.bottom = `calc(${dPercent}% - 6px)`; // 6px offset voor de halvering bal
-                });
-
-                // Entry in log
                 let logEntry = document.createElement('div');
                 logEntry.className = 'log-entry';
                 let isLast = (i === ratios.length - 1);
@@ -321,17 +346,19 @@
                 logBox.appendChild(logEntry);
                 logBox.scrollTop = logBox.scrollHeight;
 
-                // Make pop up smoothly
                 await sleep(50);
                 container.classList.add('show');
                 
-                let sleepTime = 400 - (i * 20); // speeds up
+                let sleepTime = 400 - (i * 20); 
                 if(sleepTime < 100) sleepTime = 100;
                 await sleep(sleepTime);
             }
 
             btn.style.opacity = '1';
             btn.innerText = "Opnieuw Groeien! 🌱";
+            
+            // Wacht nog héél even met frame loop killen zodat zoom netjes afrond
+            await sleep(1000);
             isGrowing = false;
         }
     </script>
