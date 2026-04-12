@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verjaardagsparadox Machine</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-gradient-start: #0f172a;
+            --bg-gradient-end: #1e293b;
+            --card-bg: rgba(30, 41, 59, 0.7);
+            --card-border: rgba(255, 255, 255, 0.1);
+            --primary-color: #f472b6; /* Pinkish */
+            --primary-hover: #db2777;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --accent-color: #8b5cf6;
+            --success-color: #10b981;
+            --chart-bg: rgba(15, 23, 42, 0.4);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: linear-gradient(135deg, var(--bg-gradient-start) 0%, var(--bg-gradient-end) 100%);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        .bg-shape { position: absolute; filter: blur(80px); z-index: 0; border-radius: 50%; opacity: 0.3; animation: float 10s infinite ease-in-out alternate; }
+        .shape-1 { width: 500px; height: 500px; background: var(--accent-color); top: -100px; left: -100px; }
+        .shape-2 { width: 400px; height: 400px; background: var(--primary-color); bottom: -100px; right: -100px; animation-delay: -5s; }
+        @keyframes float { 0% { transform: translateY(0) scale(1); } 100% { transform: translateY(40px) scale(1.1); } }
+
+        .back-btn {
+            position: absolute; top: 30px; left: 30px; display: flex; align-items: center; gap: 8px;
+            color: var(--text-muted); text-decoration: none; font-weight: 600; transition: all 0.3s ease;
+            z-index: 10; padding: 8px 16px; border-radius: 12px; background: rgba(255,255,255,0.05); border: 1px solid var(--card-border);
+        }
+        .back-btn:hover { color: var(--primary-color); background: rgba(244, 114, 182, 0.1); border-color: var(--primary-color); transform: translateX(-5px); }
+
+        .container {
+            background: var(--card-bg); backdrop-filter: blur(16px); padding: 3rem; border-radius: 24px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 0 1px var(--card-border);
+            max-width: 900px; width: 100%; z-index: 1; position: relative;
+            display: flex; flex-direction: column; gap: 2rem;
+        }
+
+        .header { text-align: center; }
+        h1 { font-size: 2.5rem; font-weight: 800; background: linear-gradient(to right, #fff, var(--primary-color)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 0.5rem; }
+        .subtitle { color: var(--text-muted); font-size: 1.1rem; }
+
+        .app-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; }
+        @media(max-width: 850px) { .app-layout { grid-template-columns: 1fr; } }
+
+        /* Left side: Simulation */
+        .sim-area { background: var(--chart-bg); border-radius: 20px; padding: 20px; border: 1px solid var(--card-border); display: flex; flex-direction: column; gap: 1rem; }
+        .sim-title { font-weight: 700; color: var(--primary-color); display: flex; justify-content: space-between; align-items: center; }
+        
+        .people-grid {
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(40px, 1fr)); gap: 10px;
+            height: 250px; overflow-y: auto; padding: 10px; background: rgba(0,0,0,0.2); border-radius: 12px;
+            scroll-behavior: smooth;
+        }
+        .people-grid::-webkit-scrollbar { width: 6px; }
+        .people-grid::-webkit-scrollbar-thumb { background: rgba(244, 114, 182, 0.2); border-radius: 3px; }
+
+        .person {
+            width: 40px; height: 40px; background: rgba(255,255,255,0.1); border-radius: 50%;
+            display: flex; align-items: center; justify-content: center; font-size: 0.7rem;
+            position: relative; animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+            border: 1px solid rgba(255,255,255,0.1); cursor: help;
+        }
+        .person.match { background: var(--primary-color); box-shadow: 0 0 15px var(--primary-color); border-color: white; transform: scale(1.1); z-index: 2; }
+        .person:hover .tooltip { opacity: 1; visibility: visible; transform: translate(-50%, -110%); }
+        
+        .tooltip {
+            position: absolute; top: 0; left: 50%; transform: translate(-50%, -100%);
+            background: #fff; color: #000; padding: 4px 8px; border-radius: 6px;
+            font-size: 0.75rem; font-weight: 700; white-space: nowrap; transition: all 0.2s;
+            opacity: 0; visibility: hidden; z-index: 10; pointer-events: none;
+        }
+
+        @keyframes popIn { from { opacity: 0; transform: scale(0.5); } to { opacity: 1; transform: scale(1); } }
+
+        /* Right side: Chart & Odds */
+        .stats-area { display: flex; flex-direction: column; gap: 1.5rem; }
+        .odds-card {
+            background: linear-gradient(135deg, rgba(244, 114, 182, 0.1), rgba(139, 92, 246, 0.1));
+            border-radius: 20px; padding: 25px; border: 1px solid rgba(244, 114, 182, 0.2);
+            text-align: center;
+        }
+        .odds-val { font-family: 'Space Mono'; font-size: 3rem; font-weight: 800; color: var(--primary-color); margin: 0.5rem 0; text-shadow: 0 0 20px rgba(244, 114, 182, 0.3); }
+        .odds-label { font-size: 1rem; color: var(--text-muted); opacity: 0.8; }
+
+        .chart-container {
+            height: 180px; position: relative; border-left: 2px solid rgba(255,255,255,0.1); border-bottom: 2px solid rgba(255,255,255,0.1);
+            margin: 10px 10px 20px 30px;
+        }
+        .chart-bar {
+            position: absolute; bottom: 0; width: 4px; background: var(--primary-color); opacity: 0.3;
+            transition: all 0.3s ease; border-radius: 2px 2px 0 0;
+        }
+        .chart-bar.current { opacity: 1; width: 6px; box-shadow: 0 0 10px var(--primary-color); }
+        .chart-limit { position: absolute; left: 0; width: 100%; border-top: 1px dashed rgba(255,255,255,0.2); height: 0; pointer-events: none; }
+        .chart-limit-label { position: absolute; left: -35px; font-size: 0.7rem; color: var(--text-muted); transform: translateY(-50%); }
+
+        .btn-row { display: flex; gap: 10px; width: 100%; }
+        button {
+            flex: 1; padding: 14px; border-radius: 12px; border: none; font-family: 'Outfit'; font-weight: 700;
+            cursor: pointer; transition: all 0.3s ease; font-size: 1rem;
+        }
+        .primary-btn { background: var(--primary-color); color: white; box-shadow: 0 4px 15px rgba(244, 114, 181, 0.3); }
+        .primary-btn:hover { background: var(--primary-hover); transform: translateY(-2px); }
+        .secondary-btn { background: rgba(255,255,255,0.05); color: var(--text-muted); border: 1px solid var(--card-border); }
+        .secondary-btn:hover { background: rgba(255,255,255,0.1); color: white; }
+
+        .info-panel {
+            background: rgba(0,0,0,0.2); padding: 1.5rem; border-radius: 16px; border-left: 4px solid var(--primary-color);
+            line-height: 1.6; font-size: 0.95rem; color: var(--text-muted); margin-top: 1rem;
+        }
+        .info-panel b { color: var(--primary-color); }
+
+        /* Modal */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(15, 23, 42, 0.82);
+            backdrop-filter: blur(10px); z-index: 100; display: flex; justify-content: center; align-items: center;
+            opacity: 0; pointer-events: none; transition: all 0.3s ease; padding: 20px;
+        }
+        .modal-overlay.active { opacity: 1; pointer-events: all; }
+        .modal-content {
+            background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 24px; padding: 2.5rem;
+            max-width: 550px; width: 100%; color: var(--text-main); transform: scale(0.9) translateY(20px);
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); box-shadow: 0 20px 50px rgba(0,0,0,0.6);
+        }
+        .modal-overlay.active .modal-content { transform: scale(1) translateY(0); }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 1rem; }
+        .modal-header h2 { font-size: 1.6rem; color: var(--primary-color); }
+        .close-btn { background: transparent; border: none; color: var(--text-muted); cursor: pointer; font-size: 1.8rem; height: 32px; width: 32px; display: flex; justify-content: center; align-items: center; }
+
+        .info-icon-btn {
+            background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.2); color: var(--primary-color);
+            width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+            cursor: pointer; transition: all 0.3s ease;
+        }
+        .info-icon-btn:hover { background: var(--primary-color); color: #fff; transform: scale(1.1); }
+        
+        .paradox-box {
+            background: rgba(139, 92, 246, 0.1); border: 1px solid rgba(139, 92, 246, 0.2);
+            padding: 15px; border-radius: 12px; margin-bottom: 1.5rem;
+        }
+        .paradox-box h4 { color: var(--accent-color); margin-bottom: 5px; font-weight: 800; display: flex; align-items: center; gap: 8px; }
+    </style>
+</head>
+<body>
+
+    <a href="index.html" class="back-btn">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+        Bibliotheek
+    </a>
+
+    <div class="bg-shape shape-1"></div>
+    <div class="bg-shape shape-2"></div>
+
+    <div class="container">
+        <div class="header">
+            <div style="display:flex; align-items:center; justify-content:center; gap:15px; margin-bottom:10px;">
+                <h1>Verjaardagsparadox</h1>
+                <div class="info-icon-btn" onclick="toggleModal()">?</div>
+            </div>
+            <p class="subtitle">Wanneer vieren 2 mensen op dezelfde dag feest? 🎉</p>
+        </div>
+
+        <div class="app-layout">
+            <!-- Simulation Area -->
+            <div class="sim-area">
+                <div class="sim-title">
+                    <span>Mensen in de kamer</span>
+                    <span id="personCount" style="font-family: 'Space Mono';">0</span>
+                </div>
+                <div class="people-grid" id="peopleGrid">
+                    <!-- People icons appear here -->
+                </div>
+                <div class="btn-row">
+                    <button class="primary-btn" onclick="addPerson()" id="addBtn">Persoon Uitnodigen +</button>
+                    <button class="secondary-btn" onclick="autoAdd(10)">+10 Snel</button>
+                    <button class="secondary-btn" onclick="resetSim()">Reset</button>
+                </div>
+                <div id="matchLog" style="font-size: 0.85rem; height: 20px; text-align: center; font-weight: 600;"></div>
+            </div>
+
+            <!-- Stats Area -->
+            <div class="stats-area">
+                <div class="odds-card">
+                    <div class="odds-label">Kans op een match</div>
+                    <div class="odds-val" id="oddsDisplay">0%</div>
+                    <div class="odds-label" id="oddsSubtext">Nog geen match gevondenn...</div>
+                </div>
+
+                <div style="font-size: 0.8rem; color: var(--text-muted); margin-left: 30px;">Kans-grafiek per persoon:</div>
+                <div class="chart-container" id="chart">
+                    <div class="chart-limit" style="bottom: 50%;"><span class="chart-limit-label">50%</span></div>
+                    <div class="chart-limit" style="bottom: 99.9%;"><span class="chart-limit-label">100%</span></div>
+                    <!-- Bars will be generated -->
+                </div>
+            </div>
+        </div>
+
+        <div class="info-panel">
+            Wist je dat? In een groep van slechts <b>23 mensen</b> is de kans al groter dan <b>50%</b> dat twee mensen op dezelfde dag jarig zijn. Dat klinkt onmogelijk, maar wiskundig klopt het echt!
+        </div>
+    </div>
+
+    <!-- Modal -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Paradox & Verjaardagen</h2>
+                <button class="close-btn" onclick="toggleModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="paradox-box">
+                    <h4>💡 Wat is een Paradox?</h4>
+                    <p style="font-size: 0.95rem; line-height: 1.5;">Een <b>paradox</b> is een uitspraak of situatie die heel vreemd of zelfs onmogelijk klinkt, maar die toch echt waar is als je er goed over nadenkt of het uitrekent.</p>
+                </div>
+
+                <p><b>De verjaardagsparadox:</b></p>
+                <div style="font-size: 0.95rem; line-height: 1.6; margin-top: 10px; color: var(--text-muted);">
+                    Hoeveel mensen heb je nodig voor een 50% kans op een 'dubbele' verjaardag? De meeste mensen gokken honderden. Maar het antwoord is maar <b>23</b>!
+                </div>
+                <br>
+                <p><b>Waarom is dit zo?</b></p>
+                <p style="font-size: 0.95rem; line-height: 1.6; color: var(--text-muted);">
+                    We kijken niet of iemand anders op <i>jouw</i> verjaardag jarig is, maar of er <i>tussen alle combinaties</i> van mensen een match zit. Met 23 mensen kun je namelijk maar liefst <b>253 verschillende paren</b> maken! Hoe meer paren, hoe meer kans op een match.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let people = []; // Array of { day: number, month: string }
+        const months = ["Jan", "Feb", "Mrt", "Apr", "Mei", "Jun", "Jul", "Aug", "Sep", "Okt", "Nov", "Dec"];
+        const monthDays = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+        
+        function toggleModal() {
+            document.getElementById('modalOverlay').classList.toggle('active');
+        }
+
+        function calculateProb(n) {
+            if (n > 365) return 1;
+            let probNoMatch = 1.0;
+            for (let i = 0; i < n; i++) {
+                probNoMatch *= (365 - i) / 365;
+            }
+            return 1 - probNoMatch;
+        }
+
+        function renderChart() {
+            const chart = document.getElementById('chart');
+            chart.querySelectorAll('.chart-bar').forEach(b => b.remove());
+            
+            const count = people.length;
+            const maxVisible = Math.max(50, count + 5);
+            
+            for (let i = 1; i <= maxVisible; i++) {
+                const p = calculateProb(i);
+                const bar = document.createElement('div');
+                bar.className = 'chart-bar';
+                bar.style.height = `${p * 100}%`;
+                bar.style.left = `${(i / maxVisible) * 100}%`;
+                if (i === count) bar.classList.add('current');
+                chart.appendChild(bar);
+            }
+        }
+
+        function updateDisplay() {
+            const prob = calculateProb(people.length);
+            const oddsDisplay = document.getElementById('oddsDisplay');
+            const personCount = document.getElementById('personCount');
+            const oddsSubtext = document.getElementById('oddsSubtext');
+            const matchLog = document.getElementById('matchLog');
+
+            oddsDisplay.innerText = `${(prob * 100).toFixed(1)}%`;
+            personCount.innerText = people.length;
+
+            renderChart();
+
+            // Find matches
+            let birthdayMap = {};
+            let matchDate = null;
+            let matchIndices = [];
+
+            people.forEach((p, idx) => {
+                const key = `${p.day}-${p.month}`;
+                if (birthdayMap[key] !== undefined) {
+                    matchDate = key;
+                    matchIndices = [birthdayMap[key], idx];
+                }
+                birthdayMap[key] = idx;
+            });
+
+            const gridPeople = document.querySelectorAll('.person');
+            gridPeople.forEach(p => p.classList.remove('match'));
+
+            if (matchDate) {
+                matchIndices.forEach(idx => gridPeople[idx].classList.add('match'));
+                oddsSubtext.innerText = `BINGO! Een match op ${matchDate.replace('-', ' ')}!`;
+                oddsSubtext.style.color = "var(--primary-color)";
+                matchLog.innerText = `🎉 Eerste match gevonden bij ${people.length} mensen!`;
+                matchLog.style.color = "var(--success-color)";
+                document.getElementById('addBtn').innerText = "Doorbuigen? +";
+            } else {
+                oddsSubtext.innerText = "Nog geen gedeelde verjaardag...";
+                oddsSubtext.style.color = "var(--text-muted)";
+                matchLog.innerText = "";
+            }
+        }
+
+        function addPerson() {
+            if (people.length >= 100) return;
+
+            const mIdx = Math.floor(Math.random() * 12);
+            const d = Math.floor(Math.random() * monthDays[mIdx]) + 1;
+            const m = months[mIdx];
+            
+            people.push({ day: d, month: m });
+
+            const person = document.createElement('div');
+            person.className = 'person';
+            person.innerHTML = `👤<div class="tooltip">${d} ${m}</div>`;
+            
+            const grid = document.getElementById('peopleGrid');
+            grid.appendChild(person);
+            grid.scrollTop = grid.scrollHeight;
+
+            updateDisplay();
+        }
+
+        async function autoAdd(n) {
+            for (let i = 0; i < n; i++) {
+                addPerson();
+                await new Promise(r => setTimeout(r, 50));
+            }
+        }
+
+        function resetSim() {
+            people = [];
+            document.getElementById('peopleGrid').innerHTML = '';
+            document.getElementById('addBtn').innerText = "Persoon Uitnodigen +";
+            updateDisplay();
+        }
+
+        // Initialize empty display
+        updateDisplay();
+    </script>
+</body>
+</html>
