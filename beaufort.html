@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Beaufort Schaal Machine</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-gradient-start: #0f172a;
+            --bg-gradient-end: #1e293b;
+            --card-bg: rgba(30, 41, 59, 0.7);
+            --card-border: rgba(255, 255, 255, 0.1);
+            --primary-color: #38bdf8; /* Sky Blue */
+            --primary-hover: #0ea5e9;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --wind-speed: 0s;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: linear-gradient(135deg, var(--bg-gradient-start) 0%, var(--bg-gradient-end) 100%);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            overflow: hidden;
+        }
+
+        .back-btn {
+            position: absolute; top: 30px; left: 30px; display: flex; align-items: center; gap: 8px;
+            color: var(--text-muted); text-decoration: none; font-weight: 600; transition: all 0.3s ease;
+            z-index: 10; padding: 8px 16px; border-radius: 12px; background: rgba(255,255,255,0.05); border: 1px solid var(--card-border);
+        }
+        .back-btn:hover { color: var(--primary-color); background: rgba(56, 189, 248, 0.1); border-color: var(--primary-color); transform: translateX(-5px); }
+
+        .container {
+            background: var(--card-bg); backdrop-filter: blur(20px); padding: 2.5rem; border-radius: 32px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 0 1px var(--card-border);
+            max-width: 900px; width: 100%; z-index: 1; position: relative;
+            display: flex; flex-direction: column; gap: 1.5rem; height: 92vh;
+        }
+
+        .header { text-align: center; }
+        h1 { font-size: 2.5rem; font-weight: 800; background: linear-gradient(to right, #fff, var(--primary-color)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .subtitle { color: var(--text-muted); font-size: 1rem; }
+
+        .simulation-view {
+            flex: 1; background: linear-gradient(to bottom, #0c4a6e, #075985); border-radius: 24px;
+            border: 1px solid var(--card-border); position: relative; overflow: hidden;
+            display: flex; flex-direction: column; justify-content: flex-end;
+        }
+
+        /* Scene Elements */
+        .sky { position: absolute; top: 0; left: 0; width: 100%; height: 60%; background: linear-gradient(to bottom, #020617, #0c4a6e); transition: background 1s; }
+        .clouds { position: absolute; width: 200%; height: 100px; top: 50px; display: flex; gap: 100px; opacity: 0.5; animation: moveClouds var(--wind-speed) linear infinite; }
+        @keyframes moveClouds { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+
+        .ground { height: 100px; background: #064e3b; position: relative; z-index: 2; border-top: 5px solid #065f46; }
+        
+        .tree {
+            position: absolute; bottom: 80px; left: 150px; width: 20px; height: 100px; background: #451a03;
+            transform-origin: bottom center; transition: transform 0.5s ease; z-index: 3;
+        }
+        .tree-top {
+            position: absolute; top: -80px; left: -40px; width: 100px; height: 100px;
+            background: #14532d; border-radius: 50%; box-shadow: inset -10px -10px 20px rgba(0,0,0,0.3);
+            animation: rustle var(--wind-speed) ease-in-out infinite;
+        }
+        @keyframes rustle { 0%, 100% { transform: translate(0,0); } 50% { transform: translate(5px, 2px); } }
+
+        .house { position: absolute; bottom: 80px; right: 150px; width: 120px; height: 100px; background: #7f1d1d; border: 2px solid #991b1b; z-index: 2; }
+        .house::after { content: ''; position: absolute; top: -60px; left: -10px; border-left: 70px solid transparent; border-right: 70px solid transparent; border-bottom: 60px solid #450a0a; }
+
+        .smoke {
+            position: absolute; top: -60px; right: 20px; width: 10px; height: 10px; background: rgba(255,255,255,0.3); border-radius: 50%;
+            animation: releaseSmoke 3s linear infinite; opacity: 0;
+        }
+        @keyframes releaseSmoke { 
+            0% { transform: translate(0,0) scale(1); opacity: 1; }
+            100% { transform: var(--smoke-direction); opacity: 0; }
+        }
+
+        .particles { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 4; }
+
+        .beaufort-display {
+            position: absolute; top: 30px; left: 30px; background: rgba(0,0,0,0.6); backdrop-filter: blur(10px);
+            padding: 20px; border-radius: 20px; border: 1px solid var(--card-border); min-width: 250px; z-index: 10;
+        }
+        .b-num { font-size: 3rem; font-weight: 800; color: var(--primary-color); line-height: 1; }
+        .b-name { font-size: 1.2rem; font-weight: 700; margin-bottom: 5px; }
+        .b-speed { font-family: 'Space Mono'; font-size: 0.9rem; color: var(--text-muted); }
+
+        .controls-row {
+            padding: 25px; background: rgba(0,0,0,0.4); border-top: 1px solid var(--card-border);
+            display: flex; flex-direction: column; gap: 15px;
+        }
+        
+        input[type="range"] {
+            width: 100%; height: 12px; border-radius: 6px; appearance: none;
+            background: linear-gradient(to right, #34d399, #fbbf24, #f87171); cursor: pointer;
+        }
+        input[type="range"]::-webkit-slider-thumb {
+            appearance: none; width: 32px; height: 32px; background: #fff;
+            border-radius: 10px; border: 4px solid var(--primary-color); box-shadow: 0 0 15px rgba(0,0,0,0.3);
+        }
+
+        .info-panel {
+            background: rgba(56, 189, 248, 0.05); padding: 1rem; border-radius: 12px; border-left: 4px solid var(--primary-color);
+            line-height: 1.5; font-size: 0.9rem; color: var(--text-muted);
+        }
+        .info-panel b { color: var(--primary-color); }
+
+        .info-icon-btn {
+            background: rgba(255, 255, 255, 0.1); border: 1px solid var(--card-border); color: var(--primary-color);
+            width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+            cursor: pointer; transition: 0.3s;
+        }
+        .info-icon-btn:hover { background: var(--primary-color); color: #000; transform: scale(1.1); }
+
+        /* Modal */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(15, 23, 42, 0.85);
+            backdrop-filter: blur(10px); z-index: 100; display: flex; justify-content: center; align-items: center;
+            opacity: 0; pointer-events: none; transition: 0.3s; padding: 20px;
+        }
+        .modal-overlay.active { opacity: 1; pointer-events: all; }
+        .modal-content {
+            background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 24px; padding: 2rem;
+            max-width: 550px; width: 100%; color: var(--text-main); transform: scale(0.9); transition: 0.3s;
+        }
+        .modal-overlay.active .modal-content { transform: scale(1); }
+        .close-btn { background: transparent; border: none; color: white; cursor: pointer; font-size: 2rem; }
+    </style>
+</head>
+<body>
+
+    <a href="index.html" class="back-btn">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+        Bibliotheek
+    </a>
+
+    <div class="container">
+        <div class="header">
+            <div style="display:flex; align-items:center; justify-content:center; gap:15px; margin-bottom: 5px;">
+                <h1>Beaufort Schaal Machine</h1>
+                <div class="info-icon-btn" onclick="toggleModal()">?</div>
+            </div>
+            <p class="subtitle">Zie hoe windkracht de wereld om ons heen verandert.</p>
+        </div>
+
+        <div class="simulation-view" id="simView">
+            <div class="sky" id="sky"></div>
+            <div class="clouds" id="clouds">
+                <svg width="100" height="40" viewBox="0 0 24 24" fill="white"><path d="M17.5,19c-3.037,0-5.5-2.463-5.5-5.5c0-0.083,0.002-0.165,0.006-0.247C11.38,13.104,10.7,13,10,13c-2.761,0-5,2.239-5,5c0,1.105,0.895,2,2,2h10.5c1.381,0,2.5-1.119,2.5-2.5S18.881,15,17.5,15c-0.116,0-0.23,0.008-0.342,0.024C17.151,15.011,17.14,15.006,17.13,15c-0.28-1.745-1.789-3.08-3.63-3.08c-1.444,0-2.693,0.82-3.324,2.025C10.059,13.91,10.03,13.882,10,13.854C9.757,11.666,7.877,10,5.6,10C3.059,10,1,12.059,1,14.6c0,2.158,1.472,3.972,3.468,4.482C4.484,19.088,4.489,19.094,4.494,19.1C4.497,19.133,4.5,19.166,4.5,19.2c0,1.546,1.254,2.8,2.8,2.8h10.2c1.657,0,3-1.343,3-3S19.157,16,17.5,16c-0.126,0-0.249,0.008-0.37,0.023C16.927,15.421,16.275,15,15.5,15c-0.828,0-1.5,0.672-1.5,1.5S14.672,18,15.5,18H17.5c0.552,0,1,0.448,1,1S18.052,20,17.5,20h-7.3c-0.221,0-0.4-0.179-0.4-0.4s0.179-0.4,0.4-0.4h7.3c1.105,0,2-0.895,2-2S18.605,16.2,17.5,16.2c-0.084,0-0.167,0.006-0.248,0.017C17.067,16.096,16.786,16,16.48,16c-0.78,0-1.424,0.597-1.492,1.363l0,0C14.914,17.414,14.821,17.456,14.73,17.48C14.364,17.575,14,17.9,14,18.3c0,0.442,0.358,0.8,0.8,0.8h2.7c0.828,0,1.5-0.672,1.5-1.5S18.328,16.1,17.5,16.1"/></svg>
+                <div style="flex:1"></div>
+                <svg width="150" height="60" viewBox="0 0 24 24" fill="white" style="opacity:0.3"><path d="M17.5,19c-3.037,0-5.5-2.463-5.5-5.5c0-0.083,0.002-0.165,0.006-0.247C11.38,13.104,10.7,13,10,13c-2.761,0-5,2.239-5,5c0,1.105,0.895,2,2,2h10.5c1.381,0,2.5-1.119,2.5-2.5S18.881,15,17.5,15c-0.116,0-0.23,0.008-0.342,0.024C17.151,15.011,17.14,15.006,17.13,15c-0.28-1.745-1.789-3.08-3.63-3.08c-1.444,0-2.693,0.82-3.324,2.025C10.059,13.91,10.03,13.882,10,13.854C9.757,11.666,7.877,10,5.6,10C3.059,10,1,12.059,1,14.6c0,2.158,1.472,3.972,3.468,4.482C4.484,19.088,4.489,19.094,4.494,19.1C4.497,19.133,4.5,19.166,4.5,19.2c0,1.546,1.254,2.8,2.8,2.8h10.2c1.657,0,3-1.343,3-3S19.157,16,17.5,16c-0.126,0-0.249,0.008-0.37,0.023C16.927,15.421,16.275,15,15.5,15c-0.828,0-1.5,0.672-1.5,1.5S14.672,18,15.5,18H17.5c0.552,0,1,0.448,1,1S18.052,20,17.5,20h-7.3c-0.221,0-0.4-0.179-0.4-0.4s0.179-0.4,0.4-0.4h7.3c1.105,0,2-0.895,2-2S18.605,16.2,17.5,16.2c-0.084,0-0.167,0.006-0.248,0.017C17.067,16.096,16.786,16,16.48,16c-0.78,0-1.424,0.597-1.492,1.363l0,0C14.914,17.414,14.821,17.456,14.73,17.48C14.364,17.575,14,17.9,14,18.3c0,0.442,0.358,0.8,0.8,0.8h2.7c0.828,0,1.5-0.672,1.5-1.5S18.328,16.1,17.5,16.1"/></svg>
+            </div>
+
+            <div class="particles" id="particles"></div>
+
+            <div class="house">
+                <div class="smoke" style="animation-delay: 0s;"></div>
+                <div class="smoke" style="animation-delay: 1s;"></div>
+                <div class="smoke" style="animation-delay: 2s;"></div>
+            </div>
+
+            <div class="tree" id="tree">
+                <div class="tree-top"></div>
+            </div>
+
+            <div class="ground"></div>
+
+            <div class="beaufort-display">
+                <div class="b-num" id="bNum">0</div>
+                <div class="b-name" id="bName">Stil</div>
+                <div class="b-speed" id="bSpeed">0 - 1 km/h</div>
+            </div>
+        </div>
+
+        <div class="controls-row">
+            <input type="range" id="bSlider" min="0" max="12" step="1" value="0" oninput="updateBeaufort()">
+            <div style="display:flex; justify-content: space-between; font-size: 0.75rem; color: var(--text-muted); font-weight: 800;">
+                <span>STIL</span>
+                <span>MATIG</span>
+                <span>HARDE WIND</span>
+                <span>STORM</span>
+                <span>ORKAAN</span>
+            </div>
+        </div>
+
+        <div class="info-panel" id="descPanel">
+            Geen zuchtje wind. Rook stijgt recht omhoog uit de schoorsteen. De bladeren aan de boom bewegen niet.
+        </div>
+    </div>
+
+    <!-- Modal -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal-content">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem;">
+                <h2>Wat is de Beaufort Schaal?</h2>
+                <button class="close-btn" onclick="toggleModal()">&times;</button>
+            </div>
+            <div style="line-height:1.6; color: var(--text-muted); font-size: 0.95rem;">
+                <p>Sir <b>Francis Beaufort</b> was een admiraal bij de Britse marine. In 1805 bedacht hij een manier om windkracht te meten zonder dure apparaten, maar gewoon door te kijken naar de effecten.</p>
+                <br>
+                <p>De schaal loopt van <b>0</b> (windstil) tot <b>12</b> (orkaan). Elke stap heeft zijn eigen 'gezicht': bij een 4 (Matige wind) zie je stof opwaaien, maar bij een 10 (Zware storm) worden bomen met wortel en al uit de grond gerukt!</p>
+                <br>
+                <p>Wist je dat windkracht 12 winden zijn van meer dan 117 kilometer per uur? Dat is sneller dan een auto op de snelweg!</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const data = [
+            { name: "Stil", speed: "0 - 1", desc: "Geen zuchtje wind. Rook stijgt recht omhoog uit de schoorsteen. De bladeren aan de boom bewegen niet.", color: "#0c4a6e" },
+            { name: "Zwak", speed: "1 - 5", desc: "Windrichting merkbaar door rookpluimen. De wind is nog niet te voelen in het gezicht.", color: "#0ea5e9" },
+            { name: "Zwak", speed: "6 - 11", desc: "Wind voelbaar in het gezicht. Bladeren ritselen zachtjes. De windvaan komt in beweging.", color: "#38bdf8" },
+            { name: "Matig", speed: "12 - 19", desc: "Bladeren en dunne takjes zijn voortdurend in beweging. Een lichte vlag rolt uit.", color: "#7dd3fc" },
+            { name: "Matig", speed: "20 - 28", desc: "Stof en los papier waaien op. Takken van gemiddelde grootte komen in beweging.", color: "#bae6fd" },
+            { name: "Vrij krachtig", speed: "29 - 38", desc: "Kleine bomen in blad beginnen te zwaaien. Er vormen zich schuimkoppen op het water.", color: "#e0f2fe" },
+            { name: "Krachtig", speed: "39 - 49", desc: "Grote takken bewegen. Je hoort de wind fluiten in de draden. Paraplu's worden lastig vast te houden.", color: "#94a3b8" },
+            { name: "Hard", speed: "50 - 61", desc: "Hele bomen bewegen. Het is lastig om tegen de wind in te lopen.", color: "#64748b" },
+            { name: "Stormachtig", speed: "62 - 74", desc: "Twijgen breken van bomen af. Voortbewegen buiten is zeer moeilijk.", color: "#475569" },
+            { name: "Storm", speed: "75 - 88", desc: "Bomen worden ontworteld. Er ontstaat schade aan gebouwen (dakpannen waaien weg).", color: "#334155" },
+            { name: "Zware storm", speed: "89 - 102", desc: "Grote schade aan bossen en gebouwen. Een mens kan niet meer op de been blijven.", color: "#1e293b" },
+            { name: "Zeer zware storm", speed: "103 - 117", desc: "Enorme verwoestingen overal. Het zicht wordt belemmerd door opwaaiend water en puin.", color: "#0f172a" },
+            { name: "Orkaan", speed: "> 117", desc: "Complete verwoesting! Alles wordt meegezogen door de wind. De lucht ziet er wit uit van het stuifwater.", color: "#020617" }
+        ];
+
+        function toggleModal() {
+            document.getElementById('modalOverlay').classList.toggle('active');
+        }
+
+        function updateBeaufort() {
+            const b = parseInt(document.getElementById('bSlider').value);
+            const current = data[b];
+
+            // Update UI
+            document.getElementById('bNum').innerText = b;
+            document.getElementById('bName').innerText = current.name;
+            document.getElementById('bSpeed').innerText = `${current.speed} km/h`;
+            document.getElementById('descPanel').innerHTML = current.desc;
+            document.getElementById('sky').style.background = current.color;
+
+            // Update Animations
+            const root = document.querySelector(':root');
+            
+            // Cloud Speed
+            let cloudDur = b === 0 ? '0s' : `${40 / (b || 0.1)}s`;
+            root.style.setProperty('--wind-speed', cloudDur);
+
+            // Tree Bend
+            const tree = document.getElementById('tree');
+            tree.style.transform = `rotate(${b * 3}deg)`;
+
+            // Smoke Direction
+            let smokeX = 50 + (b * 50);
+            let smokeY = -50 + (b * -5);
+            root.style.setProperty('--smoke-direction', `translate(${smokeX}px, ${smokeY}px) scale(2)`);
+
+            // Particles (Rain/Debris)
+            const particles = document.getElementById('particles');
+            particles.innerHTML = '';
+            if (b >= 7) {
+                for (let i = 0; i < b * 10; i++) {
+                    const p = document.createElement('div');
+                    p.style.position = 'absolute';
+                    p.style.width = '2px';
+                    p.style.height = '15px';
+                    p.style.background = 'rgba(255,255,255,0.2)';
+                    p.style.left = Math.random() * 100 + '%';
+                    p.style.top = Math.random() * 100 + '%';
+                    p.style.transform = `rotate(${b * 4}deg)`;
+                    particles.appendChild(p);
+                }
+            }
+        }
+
+        // Initialize
+        updateBeaufort();
+    </script>
+</body>
+</html>
