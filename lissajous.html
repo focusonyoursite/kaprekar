@@ -170,6 +170,7 @@
             <div class="toggle-row">
                 <label class="toggle-item"><input type="checkbox" id="showTrail" checked onchange="updateParams()"> Pad Onthouden</label>
                 <label class="toggle-item"><input type="checkbox" id="pulse" onchange="updateParams()"> Puls-effect</label>
+                <label class="toggle-item" style="color:var(--primary-color);"><input type="checkbox" id="audioToggle" onchange="toggleAudio()"> 🔊 Geluid</label>
             </div>
 
             <div class="info-panel">
@@ -215,6 +216,54 @@
         window.addEventListener('resize', setupCanvas);
         setupCanvas();
 
+        // Audio Engine
+        let audioCtx = null;
+        let oscA = null;
+        let oscB = null;
+        let gainNode = null;
+        const BASE_FREQ = 110; // Hz (Low A)
+
+        function initAudio() {
+            if (audioCtx) return;
+            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            gainNode = audioCtx.createGain();
+            gainNode.gain.setValueAtTime(0, audioCtx.currentTime);
+            gainNode.connect(audioCtx.destination);
+
+            oscA = audioCtx.createOscillator();
+            oscA.type = 'sine';
+            oscA.connect(gainNode);
+            oscA.start();
+
+            oscB = audioCtx.createOscillator();
+            oscB.type = 'sine';
+            oscB.connect(gainNode);
+            oscB.start();
+        }
+
+        function toggleAudio() {
+            const enabled = document.getElementById('audioToggle').checked;
+            if (enabled) {
+                initAudio();
+                if (audioCtx.state === 'suspended') audioCtx.resume();
+                gainNode.gain.setTargetAtTime(0.1, audioCtx.currentTime, 0.1);
+                updateAudioFrequencies();
+            } else {
+                if (gainNode) gainNode.gain.setTargetAtTime(0, audioCtx.currentTime, 0.1);
+            }
+        }
+
+        function updateAudioFrequencies() {
+            if (!oscA || !oscB) return;
+            // Map a and b to frequencies
+            // We use a slightly higher scale to make it pleasant
+            const freqA = BASE_FREQ * a;
+            const freqB = BASE_FREQ * b;
+            
+            oscA.frequency.setTargetAtTime(freqA, audioCtx.currentTime, 0.1);
+            oscB.frequency.setTargetAtTime(freqB, audioCtx.currentTime, 0.1);
+        }
+
         function updateParams() {
             a = parseFloat(document.getElementById('aRange').value);
             b = parseFloat(document.getElementById('bRange').value);
@@ -227,6 +276,8 @@
             if (!document.getElementById('showTrail').checked) {
                 points = [];
             }
+
+            updateAudioFrequencies();
         }
 
         function animate() {
