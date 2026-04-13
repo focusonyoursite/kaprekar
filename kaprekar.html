@@ -687,12 +687,12 @@
 <div class="container">
     <div class="header">
         <div class="title-container">
-            <h1>Kaprekar Machine</h1>
-            <button class="info-btn" onclick="openPopup()" title="Hoe werkt dit?">
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
-            </button>
-        </div>
-        <p class="subtitle">Voer een getal van 4 cijfers in.<br>Zorg voor minimaal twee verschillende cijfers.</p>
+        <h1>Jouw Kaprekar Machine</h1>
+        <button class="info-btn" onclick="openPopup()" title="Hoe werkt dit?">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+        </button>
+    </div>
+    <p class="subtitle">Hoi Jonah! Kies jouw favoriete getal van 4 cijfers.<br>(Zorg wel voor minimaal twee verschillende cijfers).</p>
     </div>
     
     <div class="input-group">
@@ -851,7 +851,7 @@
             const finalMsg = document.createElement('div');
             finalMsg.className = 'final-msg';
             finalMsg.innerHTML = `
-                <div style="margin-bottom: 8px;">Constante bereikt!</div>
+                <div style="margin-bottom: 8px;">GOED GEDAAN JONAH! Je hebt de constante bereikt!</div>
                 <span class="magic-number">
                     ${inputVal} &rarr; 6174
                     <span style="display:flex; align-items:center; gap:5px; background:rgba(0,0,0,0.2); padding:2px 8px; border-radius:20px; color:var(--success-color);">

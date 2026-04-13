@@ -154,10 +154,10 @@
     <div class="container">
         <div class="header">
             <div style="display:flex; align-items:center; justify-content:center; gap:15px;">
-                <h1>Steen-Papier-Schaar</h1>
+                <h1>Jouw Game: Steen-Papier-Schaar</h1>
                 <div class="info-icon-btn" onclick="toggleModal()">?</div>
             </div>
-            <p class="subtitle">Kun jij de machine verslaan, of voorspelt hij jouw gedrag?</p>
+            <p class="subtitle">Jonah, kun jij de machine verslaan, of voorspelt hij jouw gedrag?</p>
         </div>
 
         <div class="app-layout">
@@ -309,7 +309,7 @@
                 status.style.color = "var(--text-muted)";
                 scores.draw++;
             } else if (moves[jonahMove].beats === aiMove) {
-                status.innerText = "JONAH WINT! 🎉";
+                status.innerText = "JONAH WINT! 🎉 GOED ZO!";
                 status.style.color = "var(--success-color)";
                 scores.jonah++;
             } else {
