@@ -163,7 +163,7 @@
         <div class="app-layout">
             <div class="scoreboard">
                 <div class="score-item">
-                    <div class="score-label">Jonah</div>
+                    <div class="score-label">Jij</div>
                     <div class="score-val jonah" id="jonahScore">0</div>
                 </div>
                 <div class="score-item">
@@ -309,7 +309,7 @@
                 status.style.color = "var(--text-muted)";
                 scores.draw++;
             } else if (moves[jonahMove].beats === aiMove) {
-                status.innerText = "JONAH WINT! 🎉 GOED ZO!";
+                status.innerText = "Jij hebt gewonnen, Jonah! 🎉";
                 status.style.color = "var(--success-color)";
                 scores.jonah++;
             } else {
